@@ -1,0 +1,12 @@
+**/__pycache__/**
+
+# file
+*.env
+*.pyc
+*.log
+*.session
+
+caligo/downloads
+downloads
+.cache
+.vscode
