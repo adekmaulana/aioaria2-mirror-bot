@@ -59,7 +59,6 @@ def getIdFromUrl(url: Any) -> Any:
 
 class GoogleDrive(module.Module):
     name: ClassVar[str] = "GoogleDrive"
-    disabled: ClassVar[bool] = not util.BotConfig.mirror_enabled
 
     configs: Dict[str, Any]
     creds: Optional[Credentials]

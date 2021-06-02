@@ -72,9 +72,11 @@ class CommandDispatcher(Base):
     def command_predicate(self: "Bot") -> Filter:
 
         async def func(_, __, msg: pyrogram.types.Message):
-            if msg.text is not None and msg.text.startswith(self.prefix):
+            if (msg.text is not None and msg.entities[0].type == "bot_command" and
+                    (msg.from_user.id == self.owner or
+                     msg.from_user.id in self.sudo_users)):
                 parts = msg.text.split()
-                parts[0] = parts[0][len(self.prefix):]
+                parts[0] = parts[0][1:]
                 msg.segments = parts
                 return True
 
@@ -99,7 +101,7 @@ class CommandDispatcher(Base):
                 if ret is False:
                     return
 
-            cmd_len = len(self.prefix) + len(msg.segments[0]) + 1
+            cmd_len = 1 + len(msg.segments[0]) + 1
             if cmd.pattern is not None and msg.reply_to_message:
                 matches = list(cmd.pattern.finditer(msg.reply_to_message.text))
             elif cmd.pattern and msg.text:
@@ -116,10 +118,11 @@ class CommandDispatcher(Base):
                     if not isinstance(ret[1], (int, float)):
                         raise TypeError("Second value must be int/float, "
                                         f"got: {type(ret[1])}")
-                    await ctx.respond(ret[0], delete_after=ret[1])
+                    await ctx.respond(ret[0], reuse_response=True,
+                                      delete_after=ret[1])
                 else:
                     if ret is not None:
-                        await ctx.respond(ret)
+                        await ctx.respond(ret, reuse_response=True)
             except pyrogram.errors.MessageNotModified:
                 cmd.module.log.warning(
                     f"Command '{cmd.name}' triggered a message edit with no changes"

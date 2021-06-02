@@ -1,5 +1,4 @@
 import asyncio
-import urllib.parse
 from datetime import datetime, timedelta
 from itertools import zip_longest
 from pathlib import Path
@@ -14,20 +13,7 @@ class Misc(module.Module):
     task: Set[Tuple[int, asyncio.Task]]
 
     async def on_load(self) -> None:
-        if not self.bot.getConfig["mirror_enabled"]:
-            self.bot.unregister_command(self.bot.commands["upload"])
-            self.bot.unregister_command(self.bot.commands["abort"])
-            return
-
         self.task = set()
-
-    @command.desc("Generate a LMGTFY link (Let Me Google That For You)")
-    @command.usage("[search query]")
-    async def cmd_lmgtfy(self, ctx: command.Context) -> str:
-        query = ctx.input
-        params = urllib.parse.urlencode({"q": query})
-
-        return f"https://lmgtfy.com/?{params}"
 
     @command.desc("Upload file into telegram server")
     @command.usage("[file path]")
@@ -136,9 +122,6 @@ class Misc(module.Module):
             return
 
         gid = ctx.input
-        if aria2 is None and gid:
-            return "__Aria2 is not loaded.__"
-
         ret = await aria2.cancelMirror(gid)
         if ret is None:
             await ctx.msg.delete()

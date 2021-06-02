@@ -11,7 +11,6 @@ from . import (
     text,
     tg,
     time,
-    version,
 )
 
 BotConfig = config.BotConfig()

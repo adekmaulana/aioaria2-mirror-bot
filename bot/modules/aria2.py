@@ -415,7 +415,6 @@ class Aria2WebSocketServer:
 
 class Aria2(module.Module):
     name: ClassVar[str] = "Aria2"
-    disabled: ClassVar[bool] = not util.BotConfig.mirror_enabled
 
     client: Aria2WebsocketClient
 
