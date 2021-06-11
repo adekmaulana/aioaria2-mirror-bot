@@ -87,11 +87,21 @@ class CommandDispatcher(Base):
     async def on_command(self: "Bot", _: pyrogram.Client,
                          msg: pyrogram.types.Message) -> None:
         cmd = None
+        matches = None
 
         try:
             try:
                 cmd = self.commands[msg.segments[0]]
             except KeyError:
+                return
+
+            cmd_len = 1 + len(msg.segments[0]) + 1
+            if cmd.pattern is not None and msg.reply_to_message:
+                matches = list(cmd.pattern.finditer(msg.reply_to_message.text))
+            elif cmd.pattern and msg.text:
+                matches = list(cmd.pattern.finditer(msg.text[cmd_len:]))
+
+            if cmd.pattern is not None and not matches:
                 return
 
             if ((cmd.module.name == "GoogleDrive" and not cmd.module.disabled)
@@ -100,14 +110,6 @@ class CommandDispatcher(Base):
 
                 if ret is False:
                     return
-
-            cmd_len = 1 + len(msg.segments[0]) + 1
-            if cmd.pattern is not None and msg.reply_to_message:
-                matches = list(cmd.pattern.finditer(msg.reply_to_message.text))
-            elif cmd.pattern and msg.text:
-                matches = list(cmd.pattern.finditer(msg.text[cmd_len:]))
-            else:
-                matches = None
 
             ctx = command.Context(self, msg, msg.segments, cmd_len, matches)
 
