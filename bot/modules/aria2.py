@@ -325,7 +325,9 @@ class Aria2WebSocketServer:
                 try:
                     if self.invoker is not None:
                         async with self.lock:
-                            await self.bot.respond(self.invoker, progress)
+                            await self.bot.respond(self.invoker, progress,
+                                                   response=self.invoker,
+                                                   mode="edit")
                 except pyrogram.errors.MessageNotModified:
                     pass
                 except pyrogram.errors.FloodWait as err:
