@@ -72,7 +72,7 @@ class CommandDispatcher(Base):
     def command_predicate(self: "Bot") -> Filter:
 
         async def func(_, __, msg: pyrogram.types.Message):
-            if (msg.text is not None and msg.entities[0].type == "bot_command" and
+            if (msg.text is not None and msg.text.startswith("/") and
                     (msg.from_user.id == self.owner or
                      msg.from_user.id in self.sudo_users)):
                 parts = msg.text.split()

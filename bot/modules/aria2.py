@@ -455,6 +455,10 @@ class Aria2(module.Module):
 
     async def addDownload(self, types: Union[str, bytes],
                           msg: pyrogram.types.Message) -> Optional[str]:
+        response = await self.bot.client.copy_message(msg.chat.id,
+                                                      msg.chat.id,
+                                                      msg.message_id)
+
         if isinstance(types, str):
             try:
                 await self.client.addUri([types])
@@ -470,7 +474,7 @@ class Aria2(module.Module):
         async with self._ws.lock:
             if self._ws.invoker is not None:
                 await self._ws.invoker.delete()
-            self._ws.invoker = msg
+            self._ws.invoker = response
         return None
 
     async def pauseDownload(self, gid: str) -> Dict[str, Any]:

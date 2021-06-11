@@ -26,7 +26,6 @@ class TelegramBot(Base):
 
     client: Client
     owner: int
-    prefix: str
     sudo_users: Set[int]
     user: pyrogram.types.User
     uid: int
@@ -212,10 +211,10 @@ class TelegramBot(Base):
 
             # send as file if text > 4096
             if len(str(text)) > tg.MESSAGE_CHAR_LIMIT:
-                await msg.reply("Sending output as a file.")
-                response = await tg.send_as_document(text, msg, input_arg)
+                m = await msg.reply("Sending output as a file.")
+                response = await tg.send_as_document(text, m, input_arg)
 
-                await msg.delete()
+                await m.delete()
                 return response
 
         # Default to disabling link previews in responses
@@ -225,8 +224,10 @@ class TelegramBot(Base):
         # Use selected response mode if not overridden by invoker
         if mode is None:
             mode = "reply"
+        elif mode == "edit" and response is None:
+            mode = "reply"
 
-        if mode == "edit":
+        if mode == "edit" and response is not None:
             return await msg.edit(text=text, **kwargs)
 
         if mode == "reply":
