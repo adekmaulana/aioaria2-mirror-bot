@@ -372,7 +372,7 @@ class GoogleDrive(module.Module):
             # Only edit message once every 5 seconds to avoid ratelimits
             if last_update_time is None or (
                     now - last_update_time).total_seconds() >= 5:
-                self.bot.loop.create_task(ctx.respond(progress, reuse_response=True))
+                self.bot.loop.create_task(ctx.respond(progress))
 
                 last_update_time = now
 
@@ -521,22 +521,20 @@ class GoogleDrive(module.Module):
         if ctx.input and ctx.msg.reply_to_message:
             return "__Can't pass link while replying to message.__"
 
-        response = await ctx.respond("Loading...")
-
         if ctx.msg.reply_to_message:
             reply_msg = ctx.msg.reply_to_message
 
             if reply_msg.media:
                 task = self.bot.loop.create_task(
                     self.downloadFile(ctx, reply_msg))
-                self.task.add((response.message_id, task))
+                self.task.add((ctx.msg.message_id, task))
                 try:
                     await task
                 except asyncio.CancelledError:
                     return "__Transmission aborted.__"
                 else:
                     path = task.result()
-                    self.task.remove((response.message_id, task))
+                    self.task.remove((ctx.msg.message_id, task))
                     if path is None:
                         return "__Something went wrong, file probably corrupt__"
 
@@ -545,16 +543,16 @@ class GoogleDrive(module.Module):
                         types = base64.b64encode(await afp.read())
                 else:
                     file = util.File(path)
-                    await self.uploadFile(file, msg=response)
+                    await self.uploadFile(file, msg=ctx.msg)
 
                     task = self.bot.loop.create_task(file.progress())
-                    self.task.add((response.message_id, task))
+                    self.task.add((ctx.msg.message_id, task))
                     try:
                         await task
                     except asyncio.CancelledError:
                         return "__Transmission aborted.__"
                     else:
-                        self.task.remove((response.message_id, task))
+                        self.task.remove((ctx.msg.message_id, task))
 
                     return
             elif reply_msg.text:
@@ -567,7 +565,7 @@ class GoogleDrive(module.Module):
         if isinstance(types, str):
             match = DOMAIN.match(types)
             if match:
-                await ctx.respond("Generating direct link...", reuse_response=True)
+                await ctx.respond("Generating direct link...")
 
                 direct = await self.getDirectLink(match.group(1), types)
                 if direct is not None and isinstance(direct, list):
@@ -578,13 +576,13 @@ class GoogleDrive(module.Module):
                         for index, mirror in enumerate(direct):
                             text += f"`{index + 1}`. {mirror['name']}\n"
                         text += "\nSend only the number here."
-                        async with self.bot.conversation(response.chat.id,
+                        async with self.bot.conversation(ctx.msg.chat.id,
                                                          timeout=60) as conv:
                             request = await conv.send_message(text)
 
                             try:
                                 response = await conv.get_response(
-                                    filters=pyrogram.filters.user(ctx.msg.from_user.id))
+                                    filters=pyrogram.filters.me)
                             except asyncio.TimeoutError:
                                 await request.delete()
                                 types = direct[0]["url"]
@@ -597,7 +595,7 @@ class GoogleDrive(module.Module):
                     types = direct
 
         try:
-            ret = await self.aria2.addDownload(types, response)
+            ret = await self.aria2.addDownload(types, ctx.msg)
             return ret
         except NameError:
             return "__Mirroring torrent file/url needs Aria2 loaded.__"
@@ -618,6 +616,8 @@ class GoogleDrive(module.Module):
         if ctx.input and not ctx.matches:
             return "__Invalid parameters of input.__", 5
 
+        await ctx.respond("Collecting...")
+
         options: Dict[str, Any] = {}
         for match in ctx.matches:
             for index, option in enumerate(match.groups()):
@@ -632,17 +632,20 @@ class GoogleDrive(module.Module):
 
                     break
 
-        await ctx.respond("Collecting...")
-
-        filters = options.get("filter")
-        limit = int(options.get("limit", 15))
         name = options.get("name")
         parent = getIdFromUrl(options.get("parent"))
+
+        limit = int(options.get("limit", 15))
         if limit > 1000:
             return "__Can't use limit more than 1000.__", 5
-        if filters is not None:
-            filters = (f"mimeType = '{FOLDER}'" if filters == "folder" else
-                       f"mimeType != '{FOLDER}'")
+
+        filters = options.get("filter")
+        if filters is not None and filters == "folder":
+            filters = f"mimeType = '{FOLDER}'"
+        elif filters is not None and filters == "file":
+            filters = f"mimeType != '{FOLDER}'"
+        else:
+            filters = None
 
         if all(x is not None for x in [parent, name, filters]):
             query = f"'{parent}' in parents and (name contains '{name}' and {filters})"

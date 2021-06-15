@@ -6,10 +6,11 @@ import pyrogram
 from pyrogram import Client, filters
 from pyrogram.handlers import (
     CallbackQueryHandler,
+    DeletedMessagesHandler,
     InlineQueryHandler,
     MessageHandler,
 )
-from pyrogram.types import CallbackQuery, InlineQuery
+from pyrogram.types import CallbackQuery, InlineQuery, Message
 
 from ..util import BotConfig, config, tg, time
 from .base import Base
@@ -17,8 +18,9 @@ from .base import Base
 if TYPE_CHECKING:
     from .bot import Bot
 
-handler = Union[CallbackQueryHandler, InlineQueryHandler]
-update = Union[CallbackQuery, InlineQuery]
+handler = Union[CallbackQueryHandler, DeletedMessagesHandler,
+                InlineQueryHandler, MessageHandler]
+update = Union[CallbackQuery, InlineQuery, Message]
 
 
 class TelegramBot(Base):
@@ -51,19 +53,19 @@ class TelegramBot(Base):
             raise TypeError("API HASH must be a string")
 
         bot_token = self.getConfig["bot_token"]
-        if bot_token is not None and not isinstance(bot_token, str):
-            raise TypeError("Bot token must be a string")
+        if bot_token is not None:
+            if not isinstance(bot_token, str):
+                raise TypeError("Bot token must be a string")
 
-        self.client = Client(api_id=api_id,
-                             api_hash=api_hash,
-                             bot_token=bot_token,
-                             session_name=":memory:")
+            self.client = Client(api_id=api_id,
+                                 api_hash=api_hash,
+                                 bot_token=bot_token,
+                                 session_name=":memory:")
 
     async def start(self: "Bot") -> None:
         self.log.info("Starting")
         await self.init_client()
 
-        # Load prefix
         db = self.get_db("core")
         try:
             self.owner = (await db.find_one({"_id": "Core"}))["owner"]
@@ -74,7 +76,6 @@ class TelegramBot(Base):
                                              "owner": self.owner
                                          }},
                                          upsert=True)
-
         try:
             sudo_users = (await db.find_one({"_id": "Core"}))["sudo_users"]
         except (TypeError, KeyError):
@@ -211,10 +212,10 @@ class TelegramBot(Base):
 
             # send as file if text > 4096
             if len(str(text)) > tg.MESSAGE_CHAR_LIMIT:
-                m = await msg.reply("Sending output as a file.")
-                response = await tg.send_as_document(text, m, input_arg)
+                await msg.edit("Sending output as a file.")
+                response = await tg.send_as_document(text, msg, input_arg)
 
-                await m.delete()
+                await msg.delete()
                 return response
 
         # Default to disabling link previews in responses
@@ -223,11 +224,9 @@ class TelegramBot(Base):
 
         # Use selected response mode if not overridden by invoker
         if mode is None:
-            mode = "reply"
-        elif mode == "edit" and response is None:
-            mode = "reply"
+            mode = "edit"
 
-        if mode == "edit" and response is not None:
+        if mode == "edit":
             return await msg.edit(text=text, **kwargs)
 
         if mode == "reply":

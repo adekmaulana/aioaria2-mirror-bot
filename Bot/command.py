@@ -94,30 +94,27 @@ class Context:
     bot: "Bot"
     msg: pyrogram.types.Message
     segments: Sequence[str]
-    cmd_len: int
     invoker: str
 
     response: Optional[pyrogram.types.Message]
     response_mode: Optional[str]
 
-    input: Optional[Union[str, None]]
+    input: Optional[str]
     args: Sequence[str]
     matches: Optional[List[Match[str]]]
 
-    def __init__(self, bot: "Bot", msg: pyrogram.types.Message,
-                 segments: Sequence[str], cmd_len: int,
+    def __init__(self, bot: "Bot", msg: pyrogram.types.Message, cmd_len: int,
                  matches: Optional[List[Match[str]]]) -> None:
         self.bot = bot
-        self.msg = msg
-        self.segments = segments
         self.cmd_len = cmd_len
-        self.invoker = segments[0]
+        self.matches = matches
+        self.msg = msg
 
         self.response = None
         self.response_mode = None
-
-        self.input = self.msg.text[self.cmd_len:]
-        self.matches = matches
+        self.segments = self.msg.from_msg.segments
+        self.invoker = self.segments[0]
+        self.input = self.msg.from_msg.text[self.cmd_len:]
 
     def __getattr__(self, name: str) -> Any:
         if name == "args":

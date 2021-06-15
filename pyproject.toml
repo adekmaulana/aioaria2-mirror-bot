@@ -1,0 +1,98 @@
+#
+# Packaging
+#
+
+[tool.poetry]
+name = "caligo"
+version = "0.1.2"
+description = "selfbot for Telegram."
+authors = ["Adek Maulana <adek@techdro.id>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/adekmaulana/caligo"
+documentation = "https://github.com/adekmaulana/caligo/blob/master/README.md"
+
+# Search info
+keywords = ["chat", "telegram", "selfbot", "telegram-bot", "pyrogram"]
+classifiers = [
+    "Development Status :: 2 - Staging",
+    "Environment :: Console",
+    "Environment :: No Input/Output (Daemon)",
+    "Framework :: AsyncIO",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Linux/macOS",
+    "Topic :: Internet",
+    "Topic :: Communications",
+    "Topic :: Communications :: Chat"
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/adekmaulana/caligo/issues"
+"Community" = ""
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+# Core
+aiohttp = "^3.7.4"
+aiorun = "^2020.12.1"
+colorlog = "^5.0.1"
+motor = "^2.4.0"
+Pyrogram = "^1.2.9"
+python-dotenv = "^0.17.1"
+TgCrypto = "^1.2.2"
+
+# Core Extra
+dnspython = "^2.1.0"
+
+# Aria
+aioaria2 = "^1.3.2"
+
+# System
+meval = "^2.5"
+GitPython = "^3.1.17"
+speedtest-cli = "^2.1.3"
+# Debug
+beauty-print = "^0.6.1"
+
+# GoogleDrive
+google-api-python-client = "^2.8.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.4.4"
+
+# Util
+emoji = "^1.2.0"
+aiofile = "^3.5.0"
+Pillow = "^8.2.0"
+async-property = "^0.2.1"
+tenacity = "^7.0.0"
+beautifulsoup4 = "^4.9.3"
+
+[tool.poetry.dev-dependencies]
+isort = {version = "^5.7.0", extras = ["pyproject"]}
+mypy = "^0.902"
+pre-commit = "^2.13.0"
+yapf = "^0.31.0"
+
+[tool.poetry.scripts]
+caligo = "caligo.main:main"
+
+#
+# Code formatting
+#
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+
+#
+# Build system (for pip)
+#
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

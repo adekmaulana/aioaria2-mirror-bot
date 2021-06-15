@@ -89,8 +89,9 @@ class Misc(module.Module):
             return "__Pass GID or reply to message of task to abort transmission.__"
         if ctx.msg.reply_to_message and ctx.input:
             return "__Can't pass gid while replying to message.__"
-        aria2: Any = self.bot.modules.get("Aria2")
-        drive: Any = self.bot.modules.get("GoogleDrive")
+
+        aria2: Any = self.bot.modules["Aria2"]
+        drive: Any = self.bot.modules["GoogleDrive"]
 
         if ctx.msg.reply_to_message:
             reply_msg = ctx.msg.reply_to_message
@@ -121,8 +122,7 @@ class Misc(module.Module):
 
             return
 
-        gid = ctx.input
-        ret = await aria2.cancelMirror(gid)
+        ret = await aria2.cancelMirror(ctx.input)
         if ret is None:
             await ctx.msg.delete()
 

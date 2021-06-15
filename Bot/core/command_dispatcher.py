@@ -72,9 +72,9 @@ class CommandDispatcher(Base):
     def command_predicate(self: "Bot") -> Filter:
 
         async def func(_, __, msg: pyrogram.types.Message):
-            if (msg.text is not None and msg.text.startswith("/") and
-                    (msg.from_user.id == self.owner or
-                     msg.from_user.id in self.sudo_users)):
+            user = msg.from_user
+            if msg.text is not None and msg.text.startswith("/") and (
+                    user.id in self.sudo_users or user.id == self.owner):
                 parts = msg.text.split()
                 parts[0] = parts[0][1:]
                 msg.segments = parts
@@ -87,7 +87,6 @@ class CommandDispatcher(Base):
     async def on_command(self: "Bot", _: pyrogram.Client,
                          msg: pyrogram.types.Message) -> None:
         cmd = None
-        matches = None
 
         try:
             try:
@@ -100,18 +99,22 @@ class CommandDispatcher(Base):
                 matches = list(cmd.pattern.finditer(msg.reply_to_message.text))
             elif cmd.pattern and msg.text:
                 matches = list(cmd.pattern.finditer(msg.text[cmd_len:]))
-
+            else:
+                matches = None
             if cmd.pattern is not None and not matches:
                 return
 
+            response = await msg.reply("Processing...")
+            response.from_msg = msg
+
             if ((cmd.module.name == "GoogleDrive" and not cmd.module.disabled)
                     and cmd.name not in ["gdreset", "gdclear"]):
-                ret = await cmd.module.authorize(msg)
+                ret = await cmd.module.authorize(response)
 
                 if ret is False:
                     return
 
-            ctx = command.Context(self, msg, msg.segments, cmd_len, matches)
+            ctx = command.Context(self, response, cmd_len, matches)
 
             try:
                 ret = await cmd.func(ctx)
@@ -120,11 +123,10 @@ class CommandDispatcher(Base):
                     if not isinstance(ret[1], (int, float)):
                         raise TypeError("Second value must be int/float, "
                                         f"got: {type(ret[1])}")
-                    await ctx.respond(ret[0], reuse_response=True,
-                                      delete_after=ret[1])
+                    await ctx.respond(ret[0], delete_after=ret[1])
                 else:
                     if ret is not None:
-                        await ctx.respond(ret, reuse_response=True)
+                        await ctx.respond(ret)
             except pyrogram.errors.MessageNotModified:
                 cmd.module.log.warning(
                     f"Command '{cmd.name}' triggered a message edit with no changes"

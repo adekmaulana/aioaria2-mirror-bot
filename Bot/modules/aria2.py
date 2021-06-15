@@ -325,9 +325,7 @@ class Aria2WebSocketServer:
                 try:
                     if self.invoker is not None:
                         async with self.lock:
-                            await self.bot.respond(self.invoker, progress,
-                                                   response=self.invoker,
-                                                   mode="edit")
+                            await self.bot.respond(self.invoker, progress)
                 except pyrogram.errors.MessageNotModified:
                     pass
                 except pyrogram.errors.FloodWait as err:
@@ -457,7 +455,6 @@ class Aria2(module.Module):
 
     async def addDownload(self, types: Union[str, bytes],
                           msg: pyrogram.types.Message) -> Optional[str]:
-
         if isinstance(types, str):
             try:
                 await self.client.addUri([types])
