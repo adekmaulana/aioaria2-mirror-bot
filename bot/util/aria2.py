@@ -4,12 +4,10 @@ import socket
 from datetime import datetime, timedelta
 from mimetypes import guess_type
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from urllib import parse
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 from aioaria2 import Aria2WebsocketTrigger
-from async_property import async_property
 from bs4 import BeautifulSoup
 
 
@@ -115,7 +113,6 @@ class Download:
     def __eq__(self, other):
         return self.gid == other.gid
 
-    @async_property
     async def update(self) -> "Download":
         self._data = await self.client.tellStatus(self.gid)
 
@@ -281,40 +278,6 @@ class Download:
             return timedelta(seconds=int(self.eta))
         except ZeroDivisionError:
             return timedelta.max
-
-    @async_property
-    async def remove(self, force: bool = False) -> bool:
-        if force is True:
-            func = self.client.forceRemove
-        else:
-            func = self.client.remove
-
-        res = await func(self.gid)
-        if isinstance(res, str):
-            return True
-
-        return False
-
-    @async_property
-    async def pause(self, force: bool = False) -> bool:
-        if force is True:
-            func = self.client.forcePause
-        else:
-            func = self.client.pause
-
-        res = await func(self.gid)
-        if isinstance(res, str):
-            return True
-
-        return False
-
-    @async_property
-    async def resume(self) -> bool:
-        res = await self.client.unpause(self.gid)
-        if isinstance(res, str):
-            return True
-
-        return False
 
 
 class DirectLinks:

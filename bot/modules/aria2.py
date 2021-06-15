@@ -250,7 +250,7 @@ class Aria2WebSocketServer:
 
         for file in list(self.downloads.values()):
             try:
-                file = await file.update
+                file = await file.update()
             except Aria2rpcException:
                 continue
 
