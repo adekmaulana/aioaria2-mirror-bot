@@ -101,8 +101,6 @@ class CommandDispatcher(Base):
                 matches = list(cmd.pattern.finditer(msg.text[cmd_len:]))
             else:
                 matches = None
-            if cmd.pattern is not None and not matches:
-                return
 
             response = await msg.reply("Processing...")
             response.from_msg = msg
