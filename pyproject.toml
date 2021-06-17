@@ -61,6 +61,7 @@ google-auth-oauthlib = "^0.4.4"
 # Util
 aiofile = "^3.5.0"
 tenacity = "^7.0.0"
+aiopath = "<0.6.0"
 
 [tool.poetry.dev-dependencies]
 isort = {version = "^5.7.0", extras = ["pyproject"]}
