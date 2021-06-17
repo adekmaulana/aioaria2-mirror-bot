@@ -3,11 +3,11 @@ import re
 import socket
 from datetime import datetime, timedelta
 from mimetypes import guess_type
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import aiohttp
 from aioaria2 import Aria2WebsocketTrigger
+from aiopath import AsyncPath
 from bs4 import BeautifulSoup
 
 
@@ -64,8 +64,8 @@ class File:
         return int(self._data["index"])
 
     @property
-    def path(self) -> Path:
-        return Path(self._data["path"])
+    def path(self) -> AsyncPath:
+        return AsyncPath(self._data["path"])
 
     @property
     def mime_type(self) -> Optional[str]:
@@ -122,6 +122,12 @@ class Download:
 
         return self
 
+    async def is_file(self) -> bool:
+        return await (self.dir / self.name).is_file()
+
+    async def is_dir(self) -> bool:
+        return await (self.dir / self.name).is_dir()
+
     @property
     def name(self) -> str:
         if not self._name:
@@ -134,7 +140,7 @@ class Download:
                 dir_path = str(self.dir.absolute())
                 if file_path.startswith(dir_path):
                     start_pos = len(dir_path) + 1
-                    self._name = Path(file_path[start_pos:]).parts[0]
+                    self._name = AsyncPath(file_path[start_pos:]).parts[0]
                 else:
                     try:
                         self._name = self.files[0].uris[0]["uri"].split("/")[-1]
@@ -217,19 +223,11 @@ class Download:
         return self._data.get("errorMessage")
 
     @property
-    def dir(self) -> Path:
-        return Path(self._data["dir"])
+    def dir(self) -> AsyncPath:
+        return AsyncPath(self._data["dir"])
 
     @property
-    def is_file(self) -> bool:
-        return (self.dir / self.name).is_file()
-
-    @property
-    def is_dir(self) -> bool:
-        return (self.dir / self.name).is_dir()
-
-    @property
-    def path(self) -> Path:
+    def path(self) -> AsyncPath:
         return self.files[0].path
 
     @property

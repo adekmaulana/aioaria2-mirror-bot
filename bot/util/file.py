@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime, timedelta
 from mimetypes import guess_type
 from os.path import join
-from pathlib import Path
 from urllib import parse
 from typing import Any, Optional, Tuple
 
+from aiopath import AsyncPath
 from pyrogram.types import Message
 
 from .async_helpers import run_sync
@@ -19,10 +19,10 @@ class File:
     _index_link: Optional[str]
     _invoker: Any
     _name: str
-    _path: Path
+    _path: AsyncPath
     _start_time: Any
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: AsyncPath) -> None:
         self._path = path
 
         self._name = ""
@@ -38,18 +38,18 @@ class File:
             dirPath = str(self._path.parent.absolute())
             if filePath.startswith(dirPath):
                 start = len(dirPath) + 1
-                self._name = Path(filePath[start:]).parts[0]
+                self._name = AsyncPath(filePath[start:]).parts[0]
             else:
                 self._name = self._path.parts[-1]
 
         return self._name
 
     @property
-    def path(self) -> Path:
+    def path(self) -> AsyncPath:
         return self._path
 
     @property
-    def dir(self) -> Path:
+    def dir(self) -> AsyncPath:
         return self.path.parent.absolute()
 
     @property

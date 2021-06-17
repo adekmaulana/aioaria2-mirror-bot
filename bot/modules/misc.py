@@ -1,8 +1,9 @@
 import asyncio
 from datetime import datetime, timedelta
 from itertools import zip_longest
-from pathlib import Path
 from typing import Any, ClassVar, Optional, Set, Tuple, Union
+
+from aiopath import AsyncPath
 
 from .. import command, module, util
 
@@ -22,13 +23,13 @@ class Misc(module.Module):
             return "__Pass the file path.__"
 
         before = util.time.sec()
-        file_path = Path(ctx.input)
+        file_path = AsyncPath(ctx.input)
         last_update_time = None
 
-        if file_path.is_dir():
+        if await file_path.is_dir():
             await ctx.respond("__The path you input is a directory.__")
             return
-        if not file_path.is_file():
+        if not await file_path.is_file():
             await ctx.respond("__The file you input doesn't exists.__")
             return
 

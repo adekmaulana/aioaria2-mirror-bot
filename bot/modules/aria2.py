@@ -4,7 +4,6 @@ import logging
 import re
 from datetime import datetime, timedelta
 from os.path import join
-from pathlib import Path
 from typing import Any, ClassVar, Dict, Optional, Set, Tuple, Union
 from urllib import parse
 
@@ -71,7 +70,7 @@ class Aria2WebSocketServer:
         self = cls(bot, drive)
 
         download_path = self.bot.getConfig["download_path"]
-        download_path.mkdir(parents=True, exist_ok=True)
+        await download_path.mkdir(parents=True, exist_ok=True)
 
         link = "https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt"
         async with self.bot.http.get(link) as resp:
@@ -87,9 +86,9 @@ class Aria2WebSocketServer:
             "--bt-save-metadata=true", f"--bt-tracker={trackers}",
             "--daemon=true", "--allow-overwrite=true"
         ]
-        key_path = Path.home() / ".cache" / "bot" / ".certs"
-        if (key_path / "cert.pem").is_file() and (key_path /
-                                                  "key.pem").is_file():
+        key_path = self.bot.getConfig["key_path"]
+        if await (key_path / "cert.pem"
+                  ).is_file() and await (key_path / "key.pem").is_file():
             cmd.insert(4, "--rpc-listen-port=8443")
             cmd.insert(3, "--rpc-secure=true")
             cmd.insert(3, "--rpc-private-key=" + str(key_path / "key.pem"))
@@ -152,10 +151,10 @@ class Aria2WebSocketServer:
                 self.log.info(f"Complete download: [gid: '{gid}'] - Metadata")
                 return
 
-        if file.is_file:
+        if await file.is_file():
             async with self.lock:
                 self.uploads[gid] = await self.drive.uploadFile(file)
-        elif file.is_dir:
+        elif await file.is_dir():
             folderId = await self.drive.createFolder(file.name)
             folderTasks = self.drive.uploadFolder(file.dir / file.name,
                                                   gid=gid,
@@ -259,7 +258,7 @@ class Aria2WebSocketServer:
                 continue
 
             if file.complete and not file.metadata:
-                if file.is_dir:
+                if await file.is_dir():
                     counter = self.uploads[file.gid]["counter"]
                     length = len(file.files)
                     percent = round(((counter / length) * 100), 2)
@@ -267,7 +266,7 @@ class Aria2WebSocketServer:
                         f"`{file.name}`\nGID: `{file.gid}`\n"
                         f"__ComputingFolder: [{counter}/{length}] "
                         f"{percent}%__\n\n")
-                elif file.is_file:
+                elif await file.is_file():
                     f = self.uploads[file.gid]
                     progress, done = await self.uploadProgress(f)
                     if not done:
@@ -303,10 +302,10 @@ class Aria2WebSocketServer:
                     if gid in self.downloads:
                         file = self.downloads[gid]
                         del self.downloads[gid]
-                    if (file is not None and file.is_file and
+                    if (file is not None and await file.is_file() and
                             gid in self.uploads):
                         del self.uploads[gid]
-                    elif (file is not None and file.is_dir and
+                    elif (file is not None and await file.is_dir() and
                             gid in self.uploads):
                         for task in asyncio.all_tasks():
                             if task.get_name() == gid:
@@ -388,7 +387,7 @@ class Aria2WebSocketServer:
 
     async def seedFile(self, file: util.aria2.Download) -> Optional[str]:
         file_path = file.dir / (file.info_hash + ".torrent")
-        if not file_path.is_file():
+        if not await file_path.is_file():
             return
 
         port = util.aria2.get_free_port()

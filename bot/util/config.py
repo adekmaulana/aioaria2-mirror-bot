@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from aiopath import AsyncPath
 from dotenv import load_dotenv
 
 
@@ -21,6 +22,7 @@ class BotConfig:
             "gdrive_folder_id": os.environ.get("G_DRIVE_FOLDER_ID"),
             "gdrive_index_link": os.environ.get("G_DRIVE_INDEX_LINK"),
             "gdrive_secret": os.environ.get("G_DRIVE_SECRET"),
+            "key_path": AsyncPath(Path.home() / ".cache" / "bot" / ".certs"),
             "owner": os.environ.get("OWNER")
         }
 
@@ -35,7 +37,10 @@ class BotConfig:
     def __getattr__(self, name: str) -> Any:
         val = self.__getattribute__(name)
         if name == "download_path":
-            return Path(val) if val is not None else Path.home() / "downloads"
+            if val:
+                return AsyncPath(val)
+
+            return AsyncPath(Path.home() / "downloads")
         if name == "gdrive_index_link":
             return val.rstrip("/") if val is not None else val
         if name == "gdrive_secret":

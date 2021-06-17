@@ -3,11 +3,11 @@ import base64
 import pickle
 import re
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, AsyncIterator, ClassVar, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import aiofile
 import pyrogram
+from aiopath import AsyncPath
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -253,21 +253,21 @@ class GoogleDrive(module.Module):
 
     async def uploadFolder(
         self,
-        sourceFolder: Path,
+        sourceFolder: AsyncPath,
         *,
         gid: Optional[str] = None,
         parent_id: Optional[str] = None,
         msg: Optional[pyrogram.types.Message] = None
     ) -> AsyncIterator[asyncio.Task]:
-        for content in sourceFolder.iterdir():
-            if content.is_dir():
+        async for content in sourceFolder.iterdir():
+            if await content.is_dir():
                 childFolder = await self.createFolder(content.name, parent_id)
                 async for task in self.uploadFolder(content,
                                                     gid=gid,
                                                     parent_id=childFolder,
                                                     msg=msg):
                     yield task
-            elif content.is_file():
+            elif await content.is_file():
                 file = util.File(content)
                 content = await self.uploadFile(file, parent_id, msg)
                 if isinstance(content, str):  # Skip because file size is 0
@@ -288,7 +288,7 @@ class GoogleDrive(module.Module):
         elif parent_id is None and self.parent_id is not None:
             body["parents"] = [self.parent_id]
 
-        if file.path.stat().st_size > 0:
+        if await file.path.stat().st_size > 0:
             media_body = MediaFileUpload(file.path,
                                          mimetype=file.mime_type,
                                          resumable=True,
@@ -321,7 +321,7 @@ class GoogleDrive(module.Module):
         return content
 
     async def downloadFile(self, ctx: command.Context,
-                           msg: pyrogram.types.Message) -> Optional[Path]:
+                           msg: pyrogram.types.Message) -> Optional[AsyncPath]:
         download_path = self.bot.getConfig["download_path"]
 
         before = util.time.sec()
@@ -381,7 +381,10 @@ class GoogleDrive(module.Module):
                                                         file_name=file_path,
                                                         progress=prog_func)
 
-        return Path(file_path) if file_path is not None else file_path
+        if file_path is not None:
+            return AsyncPath(file_path)
+
+        return
 
     async def searchContent(self, query: str,
                             limit: int) -> AsyncIterator[List[Dict[str, Any]]]:
