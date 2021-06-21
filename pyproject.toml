@@ -46,7 +46,7 @@ TgCrypto = "^1.2.2"
 dnspython = "^2.1.0"
 
 # Aria
-aioaria2 = "^1.3.2"
+aioaria2 = "^1.3.3"
 
 # System
 speedtest-cli = "^2.1.3"
