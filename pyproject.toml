@@ -64,7 +64,7 @@ tenacity = "^7.0.0"
 aiopath = "<0.6.0"
 
 [tool.poetry.dev-dependencies]
-isort = {version = "^5.7.0", extras = ["pyproject"]}
+isort = {version = "^5.9.2", extras = ["pyproject"]}
 mypy = "^0.902"
 pre-commit = "^2.13.0"
 yapf = "^0.31.0"
