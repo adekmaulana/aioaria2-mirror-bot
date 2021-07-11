@@ -22,7 +22,7 @@ class Core(plugin.Plugin):
 
     async def on_load(self):
         self.cache = None  # type: ignore
-        self.db = self.bot.db.get_collection("core")
+        self.db = self.bot.db.get_collection("sudoers")
 
     def build_button(self) -> List[List[InlineKeyboardButton]]:
         plugins = list(self.bot.plugins.keys())
