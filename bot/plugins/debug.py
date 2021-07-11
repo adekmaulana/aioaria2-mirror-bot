@@ -13,10 +13,13 @@ from meval import meval
 
 from bot import command, plugin, util
 
+OWNER: int = int(os.environ.get("OWNER_ID", 0))
+
 
 class Debug(plugin.Plugin):
     name: ClassVar[str] = "Debug"
 
+    @command.desc("Pong")
     async def cmd_ping(self, ctx: command.Context) -> str:
         start = datetime.now()
         await ctx.respond("Calculating response time...")
@@ -25,6 +28,8 @@ class Debug(plugin.Plugin):
 
         return f"Latency: {latency} ms"
 
+
+    @command.desc("Test bot speed")
     async def cmd_speedtest(self, ctx: command.Context) -> str:
         before = util.time.usec()
 
@@ -53,6 +58,10 @@ class Debug(plugin.Plugin):
 
         return status
 
+
+    @command.usage("[code]")
+    @command.desc("Run python code to debugging")
+    @command.filters(pyrogram.filters.user(OWNER))  # Only for owners, lazy hax use env
     async def cmd_eval(self, ctx: command.Context) -> str:
         code = ctx.input
         if not code:
