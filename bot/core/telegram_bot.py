@@ -60,11 +60,6 @@ class TelegramBot(MixinBase):
         super().__init__(**kwargs)
 
     async def init_client(self: "Bot") -> None:
-        # Sanity check download_path
-        download_path: AsyncPath = self.config["download_path"]
-        if not await download_path.is_dir():
-            raise RuntimeError(f"'str{download_path}' is not a valid path")
-
         api_id = int(self.config["api_id"])
         api_hash = self.config["api_hash"]
         bot_token = self.config["bot_token"]
