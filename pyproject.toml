@@ -5,7 +5,7 @@
 [tool.poetry]
 name = "bot"
 version = "0.0.1"
-description = "Asynchronous python mirror bot Telegram."
+description = "Asynchronous python aria2 mirror bot Telegram."
 authors = ["Adek Maulana <adek@techdro.id>"]
 license = "MIT"
 readme = "README.md"
@@ -44,14 +44,12 @@ TgCrypto = "^1.2.2"
 
 # Core Extra
 dnspython = "^2.1.0"
-
-# Aria
 aioaria2 = "^1.3.2"
 
-# System
-speedtest-cli = "^2.1.3"
 # Debug
+speedtest-cli = "^2.1.3"
 beauty-print = "^0.6.1"
+meval = "^2.5"
 
 # GoogleDrive
 google-api-python-client = "^2.8.0"
@@ -59,7 +57,6 @@ google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.4"
 
 # Util
-aiofile = "^3.5.0"
 tenacity = "^7.0.0"
 aiopath = "<0.6.0"
 beautifulsoup4 = "^4.9.3"
@@ -71,7 +68,7 @@ pre-commit = "^2.13.0"
 yapf = "^0.31.0"
 
 [tool.poetry.scripts]
-bot = "bot.main:main"
+bot = "bot:start"
 
 #
 # Code formatting
