@@ -87,6 +87,9 @@ class TelegramBot(MixinBase):
         await self.dispatch_event("load")
         self.loaded = True
 
+        if "GoogleDrive" not in self.plugins or "Aria2" not in self.plugins:
+            raise RuntimeError("Aria2 websocket is not running, exiting...")
+
         # Start Telegram client
         try:
             await self.client.start()
