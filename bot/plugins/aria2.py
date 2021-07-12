@@ -11,6 +11,7 @@ from urllib import parse
 from aioaria2 import Aria2WebsocketClient, AsyncAria2Server
 from aioaria2.exceptions import Aria2rpcException
 from aiopath import AsyncPath
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from pyrogram import errors
 from tenacity import (
@@ -309,7 +310,11 @@ class Aria2WebSocketServer:
                     self.cancelled.remove(gid)
                     await self.checkDelete()
 
-            progress = await self.checkProgress()
+            try:
+                progress = await self.checkProgress()
+            except HttpError as e:
+                self.log.error("Error on progress update", exc_info=e)
+                continue
             now = datetime.now()
 
             if last_update_time is None or (
