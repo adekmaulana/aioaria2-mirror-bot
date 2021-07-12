@@ -8,13 +8,9 @@ RUN apk add --no-cache \
         g++ \
         make \
         zlib-dev \
-        tiff-dev \
-        freetype-dev \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        lcms2-dev \
-        libwebp-dev \
-        openssl-dev
+        openssl-dev \
+        libxml2-dev \
+        libxslt-dev
 RUN mkdir -p /opt/venv
 WORKDIR /opt/venv
 RUN python3 -m venv /opt/venv
@@ -50,17 +46,13 @@ RUN apk add --no-cache \
         gcc \
         g++ \
         make \
-        tiff \
-        freetype \
-        libpng \
-        libjpeg-turbo \
-        lcms2 \
         libwebp \
         openssl \
         zlib \
         busybox \
         sqlite \
         libxml2 \
+        libxslt \
         libssh2 \
         ca-certificates \
         ffmpeg
