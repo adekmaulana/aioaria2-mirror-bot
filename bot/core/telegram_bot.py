@@ -108,7 +108,7 @@ class TelegramBot(MixinBase):
         # Get sudoers from db
         db = self.db.get_collection("sudoers")
         async for user in db.find():
-            self.sudo_users.add(db["_id"])
+            self.sudo_users.add(user["_id"])
 
         # Record start time and dispatch start event
         self.start_time_us = util.time.usec()
