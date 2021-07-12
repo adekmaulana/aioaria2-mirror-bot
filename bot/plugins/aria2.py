@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timedelta
 from os.path import join
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Set, Tuple, Union
 from urllib import parse
 
 from aioaria2 import Aria2WebsocketClient, AsyncAria2Server
@@ -22,6 +22,9 @@ from tenacity import (
 )
 
 from bot import command, plugin, util
+
+if TYPE_CHECKING:
+    from bot.core import Bot
 
 
 class SeedProtocol(asyncio.SubprocessProtocol):
@@ -42,6 +45,7 @@ class SeedProtocol(asyncio.SubprocessProtocol):
 class Aria2WebSocketServer:
     log: ClassVar[logging.Logger] = logging.getLogger("Aria2WS")
 
+    bot: "Bot"
     cancelled: Set[str]
     downloads: Dict[str, util.aria2.Download]
     lock: asyncio.Lock
@@ -53,7 +57,7 @@ class Aria2WebSocketServer:
 
     _protocol: str
 
-    def __init__(self, bot: Any, drive: Any) -> None:
+    def __init__(self, bot: "Bot", drive: Any) -> None:
         self.bot = bot
         self.drive = drive
 
@@ -68,7 +72,7 @@ class Aria2WebSocketServer:
         self.stopping = False
 
     @classmethod
-    async def init(cls, bot: Any, drive: Any) -> "Aria2WebSocketServer":
+    async def init(cls, bot: Any, drive: plugin.Plugin) -> "Aria2WebSocketServer":
         self = cls(bot, drive)
 
         download_path = self.bot.config["download_path"]
@@ -189,8 +193,9 @@ class Aria2WebSocketServer:
                 async with self.lock:
                     if self.count == 0:
                         await asyncio.gather(
-                            self.context.respond(folderLink,
-                                                 mode="reply"),
+                            self.bot.respond(self.context.response,
+                                             folderLink,
+                                             mode="reply"),
                             self.context.response.delete())
                         self.context = None  # type: ignore
                     else:
@@ -213,11 +218,12 @@ class Aria2WebSocketServer:
         gid = data["params"][0]["gid"]
 
         file = await self.getDownload(client, gid)
-        await self.context.respond(f"`{file.name}`\n"
-                                   f"Status: **{file.status.capitalize()}**\n"
-                                   f"Error: __{file.error_message}__\n"
-                                   f"Code: **{file.error_code}**",
-                                   mode="reply")
+        await self.bot.respond(self.context.response,
+                               f"`{file.name}`\n"
+                               f"Status: **{file.status.capitalize()}**\n"
+                               f"Error: __{file.error_message}__\n"
+                               f"Code: **{file.error_code}**",
+                               mode="reply")
 
         self.log.warning(f"[gid: '{gid}']: {file.error_message}")
         async with self.lock:
@@ -366,7 +372,7 @@ class Aria2WebSocketServer:
             fileLink += f"\n\n__IndexLink__: [Here]({link})."
 
         async with self.lock:
-            await self.context.respond(fileLink, mode="reply")
+            await self.bot.respond(self.context.msg, fileLink, mode="reply")
             del self.uploads[file.gid]  # type: ignore
             del self.downloads[file.gid]  # type: ignore
             await self.checkDelete()
