@@ -67,8 +67,8 @@ class GoogleDrive(plugin.Plugin):
     aria2: Any
     cache: MutableMapping[int, int]
     copy_tasks: Set[Tuple[int, str]]
-    index_link: str
-    parent_id: str
+    index_link: Optional[str]
+    parent_id: Optional[str]
     task: Set[Tuple[int, asyncio.Task]]
 
     getDirectLink: util.aria2.DirectLinks
@@ -76,8 +76,14 @@ class GoogleDrive(plugin.Plugin):
     async def on_load(self) -> None:
         self.credentials = None
         self.db = self.bot.db.get_collection("gdrive")
-        self.index_link = self.bot.config["gdrive_index_link"]
-        self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
+        try:
+            self.index_link = self.bot.config["gdrive_index_link"]
+        except AttributeError:
+            self.index_link = None
+        try:
+            self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
+        except AttributeError:
+            self.parent_id = None
         self.task = set()
 
         self.cache = {}
@@ -87,12 +93,19 @@ class GoogleDrive(plugin.Plugin):
             credentials = (await self.db.find_one({"_id": 1})
                            )["credentials"]
         except (KeyError, TypeError):
-            configs = self.bot.config["gdrive_secret"]
-            if not configs:
+            try:
+                configs = self.bot.config["gdrive_secret"]
+            except AttributeError:
                 self.log.warning(f"{self.name} module secret not satisfy.")
                 self.bot.unload_plugin(self)
                 return
-            self.configs = json.loads(configs)
+
+            try:
+                self.configs = json.loads(configs)
+            except json.JSONDecodeError:
+                self.log.error("G_DRIVE_SECRET is not valid!")
+                self.bot.unload_plugin(self)
+                return
         else:
             self.aria2 = self.bot.plugins["Aria2"]
             self.credentials = Credentials.from_authorized_user_info(
