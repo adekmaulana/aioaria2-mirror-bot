@@ -132,15 +132,14 @@ class CommandDispatcher(BotMixinBase):
             )
 
             # Check credentials
-            if cmd.plugin.name == "GoogleDrive":
-                if cmd.name not in {"gdclear", "gdreset"}:
+            if cmd.plugin.name == "GoogleDrive" and cmd.name not in {"gdclear", "gdreset"}:
                     try:
                         await cmd.plugin.check_credentials(ctx)
-                    except Exception as e:
+                    except Exception as e:  # skipcq: PYL-W0703
                         constructor = CommandInvokeError(
                             f"raised from {type(e).__name__}: {str(e)}"
                         ).with_traceback(e.__traceback__)
-                        cmd.plugin.log.error(f"Error in credentials checker", exc_info=constructor)
+                        cmd.plugin.log.error("Error in credentials checker", exc_info=constructor)
                         return
                     
                     if not cmd.plugin.credentials:
@@ -157,13 +156,13 @@ class CommandDispatcher(BotMixinBase):
                 cmd.plugin.log.warning(
                     f"Command '{cmd.name}' triggered a message edit with no changes; make sure there is only a single bot instance running"
                 )
-            except Exception as e:
+            except Exception as e:  # skipcq: PYL-W0703
                 constructor = CommandInvokeError(
                     f"raised from {type(e).__name__}: {str(e)}"
                 ).with_traceback(e.__traceback__)
                 cmd.plugin.log.error(f"Error in command '{cmd.name}'", exc_info=constructor)
 
-        except Exception as e:
+        except Exception as e:  # skipcq: PYL-W0703
             constructor = CommandHandlerError(
                 f"raised from {type(e).__name__}: {str(e)}"
             ).with_traceback(e.__traceback__)
