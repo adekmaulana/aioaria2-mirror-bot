@@ -600,8 +600,7 @@ class GoogleDrive(plugin.Plugin):
                                 await request.delete()
                                 types = direct[0]["url"]
                             else:
-                                await asyncio.gather(request.delete(),
-                                                     response.delete())
+                                await request.delete()
                                 index = int(response.text) - 1
                                 types = direct[index]["url"]
                 elif direct is not None:
