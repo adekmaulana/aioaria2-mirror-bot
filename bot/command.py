@@ -51,11 +51,11 @@ def alias(*aliases: str) -> Decorator:
     return alias_decorator
 
 
-def filters(filters: Filter) -> Decorator:
+def filters(_filters: Filter) -> Decorator:
     """Sets filters on a command function."""
 
     def filter_decorator(func: CommandFunc) -> CommandFunc:
-        setattr(func, "_cmd_filters", filters)
+        setattr(func, "_cmd_filters", _filters)
         return func
 
     return filter_decorator
