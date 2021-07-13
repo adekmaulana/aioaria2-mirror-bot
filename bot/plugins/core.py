@@ -1,8 +1,10 @@
 import uuid
+import os
 from collections import defaultdict
-from typing import ClassVar, List, MutableMapping, Optional
+from typing import Any, ClassVar, List, MutableMapping, Optional
 
 import pyrogram
+from pyrogram import filters
 from pyrogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -14,11 +16,14 @@ from pyrogram.types import (
 
 from bot import command, listener, plugin, util
 
+OWNER: int = int(os.environ.get("OWNER_ID", 0))
+
 
 class Core(plugin.Plugin):
     name: ClassVar[str] = "Core"
 
     cache: pyrogram.types.Message
+    db: Any
 
     async def on_load(self):
         self.cache = None  # type: ignore
@@ -128,6 +133,7 @@ class Core(plugin.Plugin):
         await query.answer(f"😿️ {mod} doesn't have any commands.")
         return
 
+    @command.filters(filters.user(OWNER))
     @command.desc("Add user to sudoers")
     @command.usage("[id/username] [reply to user]")
     async def cmd_addsudo(self, ctx: command.Context) -> str:
@@ -149,6 +155,7 @@ class Core(plugin.Plugin):
 
         return f"**{user.first_name}** added to sudo"  # type: ignore
 
+    @command.filters(filters.user(OWNER))
     @command.desc("Remove user from sudoers")
     @command.usage("[id/username] [reply to user]")
     async def cmd_rmsudo(self, ctx: command.Context) -> str:
