@@ -81,9 +81,12 @@ class Core(plugin.Plugin):
     @listener.filters(pyrogram.filters.regex(r"menu\((\w+)\)$"))
     async def on_callback_query(self, query: CallbackQuery) -> None:
         user = query.from_user
-        if user and user.id != self.bot.owner and user.id not in self.bot.sudo_users:
-            await query.answer("Sorry, you don't have permission to access.",
+        if not user:
+            await query.answer("Sorry, i couldn't get your id. Access denied.",
                                show_alert=True)
+            return
+        if user and user.id != self.bot.owner and user.id not in self.bot.sudo_users:
+            await query.answer("Access denied.", show_alert=True)
             return
 
         mod = query.matches[0].group(1)
