@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, Any
 
-MixinBase: Any
+BotMixinBase: Any
 if TYPE_CHECKING:
-    from .bot import BotMixinBase
+    from .bot import Bot
 
-    MixinBase = Bot
+    BotMixinBase = Bot
 else:
     import abc
 
-    MixinBase = abc.ABC
+    BotMixinBase = abc.ABC

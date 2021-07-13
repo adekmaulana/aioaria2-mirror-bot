@@ -23,7 +23,7 @@ from pyrogram.types import Message, Update, User
 
 from bot import util
 
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
@@ -33,7 +33,7 @@ TgEventHandler = Union[CallbackQueryHandler,
                        MessageHandler]
 
 
-class TelegramBot(MixinBase):
+class TelegramBot(BotMixinBase):
     # Initialized during instantiation
     config: util.config.TelegramConfig[str, Any]
     _plugin_event_handlers: MutableMapping[str, Tuple[TgEventHandler, int]]

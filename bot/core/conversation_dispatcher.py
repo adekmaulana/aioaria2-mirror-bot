@@ -6,13 +6,13 @@ import pyrogram
 from pyrogram.filters import Filter, create
 
 from ..conversation import Conversation, ConversationExistError
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
 
 
-class ConversationDispatcher(MixinBase):
+class ConversationDispatcher(BotMixinBase):
     CONVERSATION: Dict[int, asyncio.Queue]
 
     def __init__(self: "Bot", **kwargs: Any) -> None:

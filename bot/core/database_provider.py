@@ -4,13 +4,13 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from bot import util
 
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
 
 
-class DataBase(MixinBase):
+class DataBase(BotMixinBase):
     db: AsyncIOMotorDatabase
     _db: AsyncIOMotorClient
 

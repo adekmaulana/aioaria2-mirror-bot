@@ -8,13 +8,13 @@ from pyrogram.types import Update
 from bot import plugin, util
 from bot.listener import Listener, ListenerFunc
 
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
 
 
-class EventDispatcher(MixinBase):
+class EventDispatcher(BotMixinBase):
     # Initialized during instantiation
     listeners: MutableMapping[str, MutableSequence[Listener]]
 

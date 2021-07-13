@@ -7,13 +7,13 @@ from pyrogram.types import Message
 from bot import command, plugin, util
 from bot.error import CommandHandlerError, CommandInvokeError, ExistingCommandError
 
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
 
 
-class CommandDispatcher(MixinBase):
+class CommandDispatcher(BotMixinBase):
     # Initialized during instantiation
     commands: MutableMapping[str, command.Command]
 

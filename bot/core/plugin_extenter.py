@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Any, Iterable, MutableMapping, Optional, Type
 from bot import plugin, plugins
 from bot.error import ExistingPluginError
 
-from .bot_mixin_base import MixinBase
+from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
 
 
-class PluginExtender(MixinBase):
+class PluginExtender(BotMixinBase):
     # Initialized during instantiation
     plugins: MutableMapping[str, plugin.Plugin]
 
