@@ -57,7 +57,7 @@ google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.4"
 
 # Util
-tenacity = "^7.0.0"
+tenacity = "^8.0.1"
 aiopath = "<0.6.0"
 beautifulsoup4 = {extras = ["lxml"], version = "^4.9.3"}
 
