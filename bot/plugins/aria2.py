@@ -326,14 +326,8 @@ class Aria2WebSocketServer:
                             await self.context.respond(progress)
                 except errors.MessageNotModified:
                     pass
-                except errors.FloodWait as err:
-                    try:
-                        wait_until = int(re.search(r"\d+", str(err)[20:])[0])  # type: ignore
-                    except (TypeError, IndexError):
-                        pass
-                    else:
-                        self.log.info(f"Flood wait for '{wait_until} seconds'")
-                        await asyncio.sleep(wait_until)
+                except errors.FloodWait as flood:
+                    await asyncio.sleep(flood.x)  # type: ignore
                 finally:
                     last_update_time = now
 
