@@ -162,9 +162,14 @@ class CommandDispatcher(BotMixinBase):
                 ).with_traceback(e.__traceback__)
                 cmd.plugin.log.error(f"Error in command '{cmd.name}'", exc_info=constructor)
 
+                await ctx.respond("⚠️ Error executing command:\n"
+                                  f"```{util.error.format_exception(e)}```")
         except Exception as e:  # skipcq: PYL-W0703
             constructor = CommandHandlerError(
                 f"raised from {type(e).__name__}: {str(e)}"
             ).with_traceback(e.__traceback__)
             if cmd is not None:
                 cmd.plugin.log.error("Error in command handler", exc_info=constructor)
+
+            await self.respond(message, "⚠️ Error in command handler"
+                               f"```{util.error.format_exception(e)}```")
