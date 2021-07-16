@@ -577,8 +577,6 @@ class GoogleDrive(plugin.Plugin):
         if isinstance(types, str):
             match = DOMAIN.match(types)
             if match:
-                await ctx.respond("Generating direct link...")
-
                 direct = await self.getDirectLink(match.group(1), types)
                 if direct is not None and isinstance(direct, list):
                     if len(direct) == 1:
