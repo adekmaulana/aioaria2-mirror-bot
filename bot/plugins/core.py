@@ -22,11 +22,9 @@ OWNER: int = int(os.environ.get("OWNER_ID", 0))
 class Core(plugin.Plugin):
     name: ClassVar[str] = "Core"
 
-    cache: pyrogram.types.Message
     db: Any
 
     async def on_load(self):
-        self.cache = None  # type: ignore
         self.db = self.bot.db.get_collection("sudoers")
 
     def build_button(self) -> List[List[InlineKeyboardButton]]:
@@ -97,14 +95,7 @@ class Core(plugin.Plugin):
                 reply_markup=InlineKeyboardMarkup(button))
             return
         if mod == "Close":
-            if self.cache is not None:
-                await self.cache.delete()
-            else:
-                await query.answer("😿️ Couldn't close expired message")
-                await query.edit_message_text(
-                    "**Bot Menu Helper**",
-                    reply_markup=InlineKeyboardMarkup(button[:-1]))
-
+            await query.message.delete()
             return
 
         plugins: MutableMapping[str, MutableMapping[str, str]] = defaultdict(dict)
@@ -186,8 +177,7 @@ class Core(plugin.Plugin):
     async def cmd_help(self, ctx: command.Context) -> Optional[str]:
         if not ctx.input:
             button = await util.run_sync(self.build_button)
-            self.cache = await ctx.msg.reply("Menu",
-                                             reply_markup=InlineKeyboardMarkup(button))
+            await ctx.respond("Menu", reply_markup=InlineKeyboardMarkup(button))
 
             return
 
