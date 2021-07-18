@@ -25,7 +25,7 @@ from bot import command, plugin, util
 
 if TYPE_CHECKING:
     from .gdrive import GoogleDrive
-    from bot.core import Bot
+    from ..core import Bot
 
 
 class SeedProtocol(asyncio.SubprocessProtocol):
@@ -73,7 +73,7 @@ class Aria2WebSocketServer:
         self.stopping = False
 
     @classmethod
-    async def init(cls, bot: Any, drive: "GoogleDrive") -> "Aria2WebSocketServer":
+    async def init(cls, bot: "Bot", drive: "GoogleDrive") -> "Aria2WebSocketServer":
         self = cls(bot, drive)
 
         download_path = self.bot.config["download_path"]
