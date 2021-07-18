@@ -69,7 +69,7 @@ class GoogleDrive(plugin.Plugin):
     copy_tasks: Set[Tuple[int, str]]
     index_link: Optional[str]
     parent_id: Optional[str]
-    task: Set[Tuple[int, asyncio.Task]]
+    tasks: Set[Tuple[int, asyncio.Task[Any]]]
 
     getDirectLink: util.aria2.DirectLinks
 
@@ -84,7 +84,7 @@ class GoogleDrive(plugin.Plugin):
             self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
         except AttributeError:
             self.parent_id = None
-        self.task = set()
+        self.tasks = set()
 
         self.cache = {}
         self.copy_tasks = set()
@@ -538,33 +538,36 @@ class GoogleDrive(plugin.Plugin):
             reply_msg = ctx.msg.reply_to_message
 
             if reply_msg.media:
+                await ctx.respond("Preparing...")
+
                 task = self.bot.loop.create_task(
                     self.downloadFile(ctx, reply_msg))
-                self.task.add((ctx.msg.message_id, task))
+                self.tasks.add((ctx.response.message_id, task))
                 try:
                     await task
                 except asyncio.CancelledError:
                     return "__Transmission aborted.__"
                 else:
                     path = task.result()
-                    self.task.remove((ctx.msg.message_id, task))
                     if path is None:
                         return "__Something went wrong, file probably corrupt__"
+                finally:
+                    self.tasks.remove((ctx.response.message_id, task))
 
                 if path.suffix == ".torrent":
                     types = base64.b64encode(await path.read_bytes())
                 else:
                     file = util.File(path)
-                    await self.uploadFile(file, msg=ctx.msg)
+                    await self.uploadFile(file, msg=ctx.response)
 
                     task = self.bot.loop.create_task(file.progress())
-                    self.task.add((ctx.msg.message_id, task))
+                    self.tasks.add((ctx.response.message_id, task))
                     try:
                         await task
                     except asyncio.CancelledError:
                         return "__Transmission aborted.__"
-                    else:
-                        self.task.remove((ctx.msg.message_id, task))
+                    finally:
+                        self.tasks.remove((ctx.response.message_id, task))
 
                     return
             elif reply_msg.text:

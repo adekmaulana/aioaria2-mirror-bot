@@ -1,7 +1,6 @@
 import ast
 import asyncio
 import logging
-import re
 from datetime import datetime, timedelta
 from os.path import join
 from pathlib import Path
@@ -25,6 +24,7 @@ from tenacity import (
 from bot import command, plugin, util
 
 if TYPE_CHECKING:
+    from .gdrive import GoogleDrive
     from bot.core import Bot
 
 
@@ -44,7 +44,7 @@ class SeedProtocol(asyncio.SubprocessProtocol):
 
 
 class Aria2WebSocketServer:
-    log: ClassVar[logging.Logger] = logging.getLogger("Aria2WS")
+    log: ClassVar[logging.Logger] = logging.getLogger("aria2ws")
 
     bot: "Bot"
     cancelled: Set[str]
@@ -52,13 +52,13 @@ class Aria2WebSocketServer:
     lock: asyncio.Lock
     uploads: Dict[str, Any]
 
-    index_link: str
+    index_link: Optional[str]
     context: command.Context
     stopping: bool
 
     _protocol: str
 
-    def __init__(self, bot: "Bot", drive: Any) -> None:
+    def __init__(self, bot: "Bot", drive: "GoogleDrive") -> None:
         self.bot = bot
         self.drive = drive
 
@@ -73,7 +73,7 @@ class Aria2WebSocketServer:
         self.stopping = False
 
     @classmethod
-    async def init(cls, bot: Any, drive: plugin.Plugin) -> "Aria2WebSocketServer":
+    async def init(cls, bot: Any, drive: "GoogleDrive") -> "Aria2WebSocketServer":
         self = cls(bot, drive)
 
         download_path = self.bot.config["download_path"]
@@ -401,7 +401,7 @@ class Aria2WebSocketServer:
             if transport:
                 transport.close()
 
-        data = bytes(protocol.output)
+        data = bytes(protocol.output)  # type: ignore
         return data.decode("ascii").rstrip()
 
 
@@ -425,7 +425,7 @@ class Aria2(plugin.Plugin):
             return
 
         try:
-            self._ws = await Aria2WebSocketServer.init(self.bot, drive)
+            self._ws = await Aria2WebSocketServer.init(self.bot, drive)  # type: ignore
         except FileNotFoundError:
             self.log.warning("Aria2 package is not installed.")
             self.bot.unload_plugin(self)

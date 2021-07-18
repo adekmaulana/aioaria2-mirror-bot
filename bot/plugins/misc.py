@@ -1,20 +1,24 @@
 import asyncio
 from datetime import datetime, timedelta
 from itertools import zip_longest
-from typing import Any, ClassVar, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Set, Tuple
 
 from aiopath import AsyncPath
 
 from .. import command, plugin, util
 
+if TYPE_CHECKING:
+    from .aria2 import Aria2
+    from .gdrive import GoogleDrive
+
 
 class Misc(plugin.Plugin):
     name: ClassVar[str] = "Misc"
 
-    task: Set[Tuple[int, asyncio.Task]]
+    tasks: Set[Tuple[int, asyncio.Task[Any]]]
 
     async def on_load(self) -> None:
-        self.task = set()
+        self.tasks = set()
 
     @command.desc("Upload local file to Telegram server")
     @command.usage("[file path]")
@@ -27,11 +31,11 @@ class Misc(plugin.Plugin):
         last_update_time = None
 
         if await file_path.is_dir():
-            await ctx.respond("__The path you input is a directory.__")
-            return
+            return "__The path you input is a directory.__"
         if not await file_path.is_file():
-            await ctx.respond("__The file you input doesn't exists.__")
-            return
+            return "__The file you input doesn't exists.__"
+
+        await ctx.respond("Preparing...")
 
         human = util.file.human_readable_bytes
         time = util.time.format_duration_td
@@ -72,42 +76,42 @@ class Misc(plugin.Plugin):
                                           str(file_path),
                                           force_document=True,
                                           progress=prog_func))  # type: ignore
-        self.task.add((ctx.msg.message_id, task))
+        self.tasks.add((ctx.response.message_id, task))
         try:
             await task
         except asyncio.CancelledError:
             return "__Transmission aborted.__"
-        else:
-            self.task.remove((ctx.msg.message_id, task))
+        finally:
+            self.tasks.remove((ctx.response.message_id, task))
 
-        await ctx.msg.delete()
+        await ctx.response.delete()
         return
 
 
     @command.desc("Method for aborting Download/Upload task")
     @command.usage("[GID], [reply to task message]")
-    async def cmd_abort(self, ctx) -> Optional[str]:
+    async def cmd_abort(self, ctx: command.Context) -> Optional[str]:
         if not ctx.input and not ctx.msg.reply_to_message:
             return "__Pass GID or reply to message of task to abort transmission.__"
         if ctx.msg.reply_to_message and ctx.input:
             return "__Can't pass gid while replying to message.__"
 
-        aria2: Any = self.bot.plugins["Aria2"]
-        drive: Any = self.bot.plugins["GoogleDrive"]
+        aria2: "Aria2" = self.bot.plugins["Aria2"]  # type: ignore
+        drive: "GoogleDrive" = self.bot.plugins["GoogleDrive"]  # type: ignore
 
         if ctx.msg.reply_to_message:
             reply_msg = ctx.msg.reply_to_message
             msg_id = reply_msg.message_id
 
-            i: Union[Tuple[int, asyncio.Task], None]
-            j: Union[Tuple[int, asyncio.Task], None]
-            for i, j in zip_longest(drive.task.copy(), self.task.copy()):
+            i: Optional[Tuple[int, asyncio.Task[Any]]]
+            j: Optional[Tuple[int, asyncio.Task[Any]]]
+            for i, j in zip_longest(drive.tasks.copy(), self.tasks.copy()):
                 if i is not None:
                     m_id = i[0]
                     task = i[1]
                     if m_id == msg_id:
                         task.cancel()
-                        drive.task.remove((m_id, task))
+                        drive.tasks.remove((m_id, task))
                         break
 
                 if j is not None:
@@ -115,17 +119,13 @@ class Misc(plugin.Plugin):
                     task = j[1]
                     if m_id == msg_id:
                         task.cancel()
-                        self.task.remove((m_id, task))
+                        self.tasks.remove((m_id, task))
                         break
             else:
                 return "__The message you choose is not in task.__"
 
-            await ctx.msg.delete()
+            await reply_msg.delete()
 
             return
 
-        ret = await aria2.cancelMirror(ctx.input)
-        if ret is None:
-            await ctx.msg.delete()
-
-        return ret
+        return await aria2.cancelMirror(ctx.input)
