@@ -111,7 +111,6 @@ class Misc(plugin.Plugin):
                     task = i[1]
                     if m_id == msg_id:
                         task.cancel()
-                        drive.tasks.remove((m_id, task))
                         break
 
                 if j is not None:
@@ -119,7 +118,6 @@ class Misc(plugin.Plugin):
                     task = j[1]
                     if m_id == msg_id:
                         task.cancel()
-                        self.tasks.remove((m_id, task))
                         break
             else:
                 return "__The message you choose is not in task.__"

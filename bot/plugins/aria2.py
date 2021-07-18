@@ -219,7 +219,7 @@ class Aria2WebSocketServer:
         gid = data["params"][0]["gid"]
 
         file = await self.getDownload(client, gid)
-        await self.bot.respond(self.context.response,
+        await self.bot.respond(self.context.msg,
                                f"`{file.name}`\n"
                                f"Status: **{file.status.capitalize()}**\n"
                                f"Error: __{file.error_message}__\n"
