@@ -122,8 +122,6 @@ class Misc(plugin.Plugin):
             else:
                 return "__The message you choose is not in task.__"
 
-            await reply_msg.delete()
-
             return
 
         return await aria2.cancelMirror(ctx.input)
