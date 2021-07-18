@@ -51,6 +51,12 @@ Copy `config.env_sample` to `config.env` and edit the settings as desired. Each 
 
 Obtain the _API ID_ and _API HASH_ from [Telegram's website](https://my.telegram.org/apps). **TREAT THESE SECRETS LIKE A PASSWORD!**
 
+Obtain the _BOT TOKEN_ from [@BotFather](https://t.me/BotFather). **TREAT THESE SECRETS LIKE A PASSWORD!**
+
+Obtain the _DB URI_ from [MongoDB](https://www.mongodb.com/try). **TREAT THESE SECRETS LIKE A PASSWORD!**
+
+Obtain the _G DRIVE SECRET_ from [Google Console](https://console.cloud.google.com/apis/credentials). **TREAT THESE SECRETS LIKE A PASSWORD!**
+
 Configuration must be complete before starting the bot for the first time for it to work properly.
 
 ## Usage
