@@ -9,7 +9,9 @@ from urllib import parse
 
 from aioaria2 import Aria2WebsocketClient, AsyncAria2Server
 from aioaria2.exceptions import Aria2rpcException
+from aiofile import AIOFile, Reader, Writer
 from aiopath import AsyncPath
+from aiopath.handle import CHUNK_SIZE
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from pyrogram import errors
@@ -25,6 +27,7 @@ from bot import command, plugin, util
 
 if TYPE_CHECKING:
     from .gdrive import GoogleDrive
+    from .mega import Mega
     from ..core import Bot
 
 
@@ -55,6 +58,7 @@ class Aria2WebSocketServer:
     index_link: Optional[str]
     context: command.Context
     stopping: bool
+    mega: Set[str]
 
     _protocol: str
 
@@ -71,6 +75,7 @@ class Aria2WebSocketServer:
         self.index_link = self.drive.index_link
         self.context = None  # type: ignore
         self.stopping = False
+        self.mega = set()
 
     @classmethod
     async def init(cls, bot: "Bot", drive: "GoogleDrive") -> "Aria2WebSocketServer":
@@ -156,10 +161,35 @@ class Aria2WebSocketServer:
                 self.log.info(f"Complete download: [gid: '{gid}'] - Metadata")
                 return
 
-        if await file.is_file():
+        if file.gid in self.mega:
+            async with self.lock:
+                self.mega.remove(gid)
+                del self.downloads[gid]
+
+            M: "Mega" = self.bot.plugins["Mega"]  # type: ignore
+            downloadedFile = file.path
+            outputFile: AsyncPath = M.file[gid]["file"]
+            aes = M.file[gid]["aes"]
+            CHUNK_SIZE = 50 * 1024 * 1024
+
+            self.log.info(f"Decrypting download: [gid: '{gid}']")
+            async with AIOFile(outputFile, "w+b") as f:
+                writer = Writer(f)
+                async with AIOFile(downloadedFile, "rb") as temp:
+                    reader = Reader(temp, chunk_size=CHUNK_SIZE)
+                    async for chunk in reader:
+                        chunk = await util.run_sync(aes.decrypt, chunk)
+                        await writer(chunk)
+                        await f.fsync()
+            await downloadedFile.unlink()
+            outputFile = await outputFile.rename(outputFile.parent / outputFile.stem)
+            async with self.lock:
+                self.downloads[gid] = await file.update()
+                self.uploads[gid] = await self.drive.uploadFile(await file.update())
+        elif await file.is_file() and file.gid not in self.mega:
             async with self.lock:
                 self.uploads[gid] = await self.drive.uploadFile(file)
-        elif await file.is_dir():
+        elif await file.is_dir() and file.gid not in self.mega:
             folderId = await self.drive.createFolder(file.name)
             folderTasks = self.drive.uploadFolder(file.dir / file.name,
                                                   gid=gid,
@@ -445,15 +475,19 @@ class Aria2(plugin.Plugin):
                                   str(err).split(":", 2)[-1].strip())
         return "__" + res["error"]["message"] + "__"
 
-    async def addDownload(self, types: Union[str, bytes],
-                          ctx: command.Context) -> Optional[str]:
+    async def addDownload(
+        self,types: Union[str, bytes],
+        ctx: command.Context,
+        mega: bool = False,
+        options: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        gid = None
         if isinstance(types, str):
             try:
-                await self.client.addUri([types])
+                gid = await self.client.addUri([types], options=options)
             except Aria2rpcException as e:
                 return await self._formatSE(e)
         elif isinstance(types, bytes):
-            await self.client.addTorrent(str(types, "utf-8"))
+            await self.client.addTorrent(str(types, "utf-8"), options=options)
         else:
             self.log.error(f"Unknown types of {type(types)}")
             return f"__Unknown types of {type(types)}__"
@@ -463,7 +497,13 @@ class Aria2(plugin.Plugin):
             if self._ws.context is not None and self._ws.context.response is not None:
                 await self._ws.context.response.delete()
             self._ws.context = ctx
-        return None
+
+        if gid:
+            if mega:
+                self._ws.mega.add(gid)
+            return gid
+        
+        return
 
     async def pauseDownload(self, gid: str) -> Dict[str, Any]:
         return await self.client.pause(gid)
