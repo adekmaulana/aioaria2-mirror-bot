@@ -62,10 +62,12 @@ class Mega(plugin.Plugin):
         metaMAC = key[6:8]
 
         file = await self.api_request(file_id)
+        if not isinstance(file, (MutableMapping, dict)):
+            return "__The file you are trying to download is no longer available.__"
         att = crypto.base64_url_decode(file["at"])
         att = crypto.decrypt_attr(att, k)
 
-        kStr = await util.run_sync(crypto.a32_to_str, k)
+        kStr = crypto.a32_to_str(k)
         counter = Counter.new(128, initial_value=((iv[0] << 32) + iv[1]) << 64)
         aes = AES.new(kStr, AES.MODE_CTR, counter=counter)
 
