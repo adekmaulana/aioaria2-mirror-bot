@@ -11,7 +11,6 @@ from aioaria2 import Aria2WebsocketClient, AsyncAria2Server
 from aioaria2.exceptions import Aria2rpcException
 from aiofile import AIOFile, Reader, Writer
 from aiopath import AsyncPath
-from aiopath.handle import CHUNK_SIZE
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from pyrogram import errors
@@ -161,35 +160,35 @@ class Aria2WebSocketServer:
                 self.log.info(f"Complete download: [gid: '{gid}'] - Metadata")
                 return
 
-        if file.gid in self.mega:
-            async with self.lock:
-                self.mega.remove(gid)
-                del self.downloads[gid]
+        if await file.is_file():
+            if gid in self.mega:
+                async with self.lock:
+                    del self.downloads[gid]
 
-            M: "Mega" = self.bot.plugins["Mega"]  # type: ignore
-            downloadedFile = file.path
-            outputFile: AsyncPath = M.file[gid]["file"]
-            aes = M.file[gid]["aes"]
-            CHUNK_SIZE = 50 * 1024 * 1024
+                M: "Mega" = self.bot.plugins["Mega"]  # type: ignore
+                outputFile: AsyncPath = M.file[gid]["file"]
+                aes = M.file[gid]["aes"]
+                CHUNK_SIZE = 50 * 1024 * 1024
 
-            self.log.info(f"Decrypting download: [gid: '{gid}']")
-            async with AIOFile(outputFile, "w+b") as f:
-                writer = Writer(f)
-                async with AIOFile(downloadedFile, "rb") as temp:
-                    reader = Reader(temp, chunk_size=CHUNK_SIZE)
-                    async for chunk in reader:
-                        chunk = await util.run_sync(aes.decrypt, chunk)
-                        await writer(chunk)
-                        await f.fsync()
-            await downloadedFile.unlink()
-            outputFile = await outputFile.rename(outputFile.parent / outputFile.stem)
-            async with self.lock:
-                self.downloads[gid] = await file.update()
-                self.uploads[gid] = await self.drive.uploadFile(await file.update())
-        elif await file.is_file() and file.gid not in self.mega:
-            async with self.lock:
-                self.uploads[gid] = await self.drive.uploadFile(file)
-        elif await file.is_dir() and file.gid not in self.mega:
+                self.log.info(f"Decrypting download: [gid: '{gid}']")
+                async with AIOFile(outputFile, "w+b") as f:
+                    writer = Writer(f)
+                    async with AIOFile(file.path, "rb") as temp:
+                        reader = Reader(temp, chunk_size=CHUNK_SIZE)
+                        async for chunk in reader:
+                            chunk = await util.run_sync(aes.decrypt, chunk)
+                            await writer(chunk)
+                            await f.fsync()
+                await file.path.unlink()
+                outputFile = await outputFile.rename(outputFile.parent / outputFile.stem)
+                async with self.lock:
+                    self.mega.remove(gid)
+                    self.downloads[gid] = await file.update()
+                    self.uploads[gid] = await self.drive.uploadFile(self.downloads[gid])
+            else:
+                async with self.lock:
+                    self.uploads[gid] = await self.drive.uploadFile(file)
+        elif await file.is_dir():
             folderId = await self.drive.createFolder(file.name)
             folderTasks = self.drive.uploadFolder(file.dir / file.name,
                                                   gid=gid,
@@ -289,6 +288,20 @@ class Aria2WebSocketServer:
                         f"__ComputingFolder: [{counter}/{length}] "
                         f"{percent}%__\n\n")
                 elif await file.is_file():
+                    if file.gid in self.mega:
+                        M: "Mega" = self.bot.plugins["Mega"]  # type: ignore
+                        tempFile = M.file[file.gid]["file"]
+
+                        fileSize = file.total_length
+                        decrypted = await (tempFile.stat()).st_size
+                        percent = round(((decrypted / fileSize) * 100))
+                        progress_string += (
+                            f"`{file.name}`\nGID: `{file.gid}`\n"
+                            f"Status: **Decrypting"
+                            f"__{human(decrypted)} of {human(fileSize)}"
+                            f"{percent}%__\n\n")
+                        continue
+
                     f = self.uploads[file.gid]
                     progress, done = await self.uploadProgress(f)
                     if not done:
