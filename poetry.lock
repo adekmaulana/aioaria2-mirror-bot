@@ -429,17 +429,17 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "motor"
-version = "2.4.0"
+version = "2.5.0"
 description = "Non-blocking MongoDB driver for Tornado or asyncio"
 category = "main"
 optional = false
 python-versions = ">=3.5.2"
 
 [package.dependencies]
-pymongo = ">=3.11,<4"
+pymongo = ">=3.12,<4"
 
 [package.extras]
-encryption = ["pymongo[encryption] (>=3.11,<4)"]
+encryption = ["pymongo[encryption] (>=3.12,<4)"]
 
 [[package]]
 name = "multidict"
@@ -824,7 +824,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "6f7cd212524691caa1212cdea6eabe427d5ad7993a70eb66889aa56920d1be31"
+content-hash = "33bf4c83a6c06523c8bf723af8c34394c58b7055144892d54caddf28def29e48"
 
 [metadata.files]
 aioaria2 = [
@@ -1057,8 +1057,8 @@ meval = [
     {file = "meval-2.5.tar.gz", hash = "sha256:a5aa481617f1fd07a5972076cd3aa14e38515ac84b3ff028efdf76371a856765"},
 ]
 motor = [
-    {file = "motor-2.4.0-py3-none-any.whl", hash = "sha256:839c11a43897dbec8e5ba0e87a9c9b877239803126877b2efa5cef89aa6b687a"},
-    {file = "motor-2.4.0.tar.gz", hash = "sha256:1196db507142ef8f00d953efa2f37b39335ef2d72af6ce4fbccfd870b65c5e9f"},
+    {file = "motor-2.5.0-py3-none-any.whl", hash = "sha256:2701f71129fac70d40291a2226bd3ce8682f529711ce2e463d5035d8e937cf9c"},
+    {file = "motor-2.5.0.tar.gz", hash = "sha256:eafa05a7233f3373ee110b1d7ad0469f7aa942dcd60cb65f7474ae41628a0e0d"},
 ]
 multidict = [
     {file = "multidict-5.1.0-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:b7993704f1a4b204e71debe6095150d43b2ee6150fa4f44d6d966ec356a8d61f"},
