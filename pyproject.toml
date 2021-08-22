@@ -35,7 +35,7 @@ python = "^3.9"
 
 # Core
 aiohttp = "^3.7.4"
-aiorun = "^2020.12.1"
+aiorun = "^2021.8.1"
 colorlog = "^5.0.1"
 motor = "^2.4.0"
 Pyrogram = "^1.2.9"
