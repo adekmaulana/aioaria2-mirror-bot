@@ -63,7 +63,7 @@ beautifulsoup4 = {extras = ["lxml"], version = "^4.9.3"}
 pycryptodome = "^3.10.1"
 
 [tool.poetry.dev-dependencies]
-isort = {version = "^5.9.2", extras = ["pyproject"]}
+isort = {version = "^5.9.3", extras = ["pyproject"]}
 mypy = "^0.910"
 pre-commit = "^2.13.0"
 yapf = "^0.31.0"
