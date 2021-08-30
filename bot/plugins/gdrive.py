@@ -101,8 +101,7 @@ class GoogleDrive(plugin.Plugin):
         self.copy_tasks = set()
 
         try:
-            credentials = (await self.db.find_one({"_id": 1})
-                           )["credentials"]
+            credentials = (await self.db.find_one({"_id": 1}))["credentials"]
         except (KeyError, TypeError):
             try:
                 configs = self.bot.config["gdrive_secret"]
@@ -138,15 +137,16 @@ class GoogleDrive(plugin.Plugin):
                 self.log.info("Refreshing credentials")
                 await util.run_sync(self.credentials.refresh, Request())
 
-                await self.db.update_one(
-                    {"_id": 1},
-                    {"$set": {
+                await self.db.update_one({"_id": 1}, {
+                    "$set": {
                         "credentials": json.loads(self.credentials.to_json())
-                    }})
+                    }
+                })
             else:
                 user = ctx.msg.from_user
                 if user.id != self.bot.owner:
-                    await ctx.respond("Please, ask the owner to generate the credentials.")
+                    await ctx.respond(
+                        "Please, ask the owner to generate the credentials.")
                     return
 
                 await asyncio.gather(
@@ -196,7 +196,8 @@ class GoogleDrive(plugin.Plugin):
         token = response.text
 
         try:
-            await asyncio.gather(request.delete(), response.delete(), token_response.delete(),
+            await asyncio.gather(request.delete(), response.delete(),
+                                 token_response.delete(),
                                  util.run_sync(flow.fetch_token, code=token))
         except InvalidGrantError:
             return ("⚠️ **Error fetching token**\n\n"
@@ -208,7 +209,8 @@ class GoogleDrive(plugin.Plugin):
             {"_id": 1},
             {"$set": {
                 "credentials": json.loads(self.credentials.to_json())
-            }}, upsert=True)
+            }},
+            upsert=True)
 
         return "Credentials created."
 
@@ -217,9 +219,13 @@ class GoogleDrive(plugin.Plugin):
         fields = ", ".join(fields)
 
         return await util.run_sync(self.service.files().get(  # type: ignore
-            fileId=identifier, fields=fields, supportsAllDrives=True).execute)
+            fileId=identifier,
+            fields=fields,
+            supportsAllDrives=True).execute)
 
-    async def copyFile(self, file_id: str, parent_id: Optional[str] = None) -> str:
+    async def copyFile(self,
+                       file_id: str,
+                       parent_id: Optional[str] = None) -> str:
         metadata = {}
         if parent_id is not None:
             metadata["parents"] = [parent_id]
@@ -227,12 +233,18 @@ class GoogleDrive(plugin.Plugin):
             metadata["parents"] = [self.parent_id]
 
         file = await util.run_sync(self.service.files().copy(  # type: ignore
-            body=metadata, fileId=file_id, supportsAllDrives=True).execute)
+            body=metadata,
+            fileId=file_id,
+            supportsAllDrives=True).execute)
         return file["id"]
 
-    async def copyFolder(self, target: str, *, parent_id: Optional[str] = None,
-                         name: Optional[str] = None, msg_id: Optional[int] = None
-                         ) -> AsyncIterator[asyncio.Task]:
+    async def copyFolder(
+            self,
+            target: str,
+            *,
+            parent_id: Optional[str] = None,
+            name: Optional[str] = None,
+            msg_id: Optional[int] = None) -> AsyncIterator[asyncio.Task]:
         query = f"'{target}' in parents"
 
         async for contents in self.searchContent(query=query, limit=1000):
@@ -248,12 +260,12 @@ class GoogleDrive(plugin.Plugin):
                                                           folderId=parent_id)
                     async for task in self.copyFolder(target=content["id"],
                                                       parent_id=childFolder,
-                                                      name=name, msg_id=msg_id):
+                                                      name=name,
+                                                      msg_id=msg_id):
                         yield task
                 else:
                     yield self.bot.loop.create_task(self.copyFile(
-                                                    content["id"],
-                                                    parent_id=parent_id),
+                        content["id"], parent_id=parent_id),
                                                     name=name)
                     await asyncio.sleep(0.5)
 
@@ -269,8 +281,11 @@ class GoogleDrive(plugin.Plugin):
         elif folderId is None and self.parent_id is not None:
             folder_metadata["parents"] = [self.parent_id]
 
-        folder = await util.run_sync(self.service.files().create(  # type: ignore
-            body=folder_metadata, fields="id", supportsAllDrives=True).execute)
+        folder = await util.run_sync(
+            self.service.files().create(  # type: ignore
+                body=folder_metadata,
+                fields="id",
+                supportsAllDrives=True).execute)
         return folder["id"]
 
     async def uploadFolder(
@@ -299,12 +314,16 @@ class GoogleDrive(plugin.Plugin):
                                                 name=gid)
                 await asyncio.sleep(0.5)
 
-    async def uploadFile(self,
-                         file: Union[util.File, util.aria2.Download],
-                         parent_id: Optional[str] = None,
-                         msg: Optional[pyrogram.types.Message] = None
-                         ) -> Union[MediaFileUpload, str]:
-        body: MutableMapping[str, Any] = {"name": file.name, "mimeType": file.mime_type}
+    async def uploadFile(
+        self,
+        file: Union[util.File, util.aria2.Download],
+        parent_id: Optional[str] = None,
+        msg: Optional[pyrogram.types.Message] = None
+    ) -> Union[MediaFileUpload, str]:
+        body: MutableMapping[str, Any] = {
+            "name": file.name,
+            "mimeType": file.mime_type
+        }
         if parent_id is not None:
             body["parents"] = [parent_id]
         elif parent_id is None and self.parent_id is not None:
@@ -315,28 +334,30 @@ class GoogleDrive(plugin.Plugin):
                                          mimetype=file.mime_type,
                                          resumable=True,
                                          chunksize=50 * 1024 * 1024)
-            content = await util.run_sync(self.service.files().create,  # type: ignore
-                                          body=body,
-                                          media_body=media_body,
-                                          fields="id, size, webContentLink",
-                                          supportsAllDrives=True)
-        else:
-            media_body = MediaFileUpload(file.path, mimetype=file.mime_type)
-            content = await util.run_sync(self.service.files().create(  # type: ignore
+            content = await util.run_sync(
+                self.service.files().create,  # type: ignore
                 body=body,
                 media_body=media_body,
                 fields="id, size, webContentLink",
-                supportsAllDrives=True).execute)
+                supportsAllDrives=True)
+        else:
+            media_body = MediaFileUpload(file.path, mimetype=file.mime_type)
+            content = await util.run_sync(
+                self.service.files().create(  # type: ignore
+                    body=body,
+                    media_body=media_body,
+                    fields="id, size, webContentLink",
+                    supportsAllDrives=True).execute)
 
             return content.get("id")
 
         if isinstance(file, util.aria2.Download):
-            content.gid, content.name, content.start_time = (file.gid, file.name,
+            content.gid, content.name, content.start_time = (file.gid,
+                                                             file.name,
                                                              util.time.sec())
         elif isinstance(file, util.File):
             file.content, file.start_time, file.invoker = (content,
-                                                           util.time.sec(),
-                                                           msg)
+                                                           util.time.sec(), msg)
             if self.index_link is not None:
                 file.index_link = self.index_link
 
@@ -390,7 +411,8 @@ class GoogleDrive(plugin.Plugin):
                 f"Status: **Downloading**\n"
                 f"Progress: [{bullets + space}] {round(percent * 100)}%\n"
                 f"__{human(current)} of {human(total)} @ "
-                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n")  # type: ignore
+                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n"
+            )  # type: ignore
             # Only edit message once every 5 seconds to avoid ratelimits
             if last_update_time is None or (
                     now - last_update_time).total_seconds() >= 5:
@@ -399,34 +421,38 @@ class GoogleDrive(plugin.Plugin):
                 last_update_time = now
 
         if file_name is None:
-            file_path = await ctx.bot.client.download_media(msg, progress=prog_func)
+            file_path = await ctx.bot.client.download_media(msg,
+                                                            progress=prog_func)
         else:
             file_path = f"{download_path}/{file_name}"
             file_path = await ctx.bot.client.download_media(msg,
                                                             file_name=file_path,
-                                                            progress=prog_func)  # type: ignore
+                                                            progress=prog_func
+                                                           )  # type: ignore
 
         if file_path is not None:
             return AsyncPath(file_path)
 
         return
 
-    async def searchContent(self, query: str,
-                            limit: int) -> AsyncIterator[List[MutableMapping[str, Any]]]:
+    async def searchContent(
+            self, query: str,
+            limit: int) -> AsyncIterator[List[MutableMapping[str, Any]]]:
         fields = "nextPageToken, files(name, id, mimeType, webViewLink)"
         pageToken = None
 
         while True:
-            response = await util.run_sync(self.service.files().list(  # type: ignore
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True,
-                q=query,
-                spaces="drive",
-                corpora="allDrives",
-                fields=fields,
-                pageSize=limit,
-                orderBy="folder, modifiedTime desc, name asc",
-                pageToken=pageToken).execute)
+            response = await util.run_sync(
+                self.service.files().list(  # type: ignore
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
+                    q=query,
+                    spaces="drive",
+                    corpora="allDrives",
+                    fields=fields,
+                    pageSize=limit,
+                    orderBy="folder, modifiedTime desc, name asc",
+                    pageToken=pageToken).execute)
 
             yield response.get("files", [])
 
@@ -434,18 +460,20 @@ class GoogleDrive(plugin.Plugin):
             if pageToken is None:
                 break
 
-    @command.desc("Delete your GoogleDrive files/folders, warning this will skip trash")
+    @command.desc(
+        "Delete your GoogleDrive files/folders, warning this will skip trash")
     @command.alias("gdrm")
-    async def cmd_gdremove(self, ctx: command.Context, *,
-                           identifier: Optional[str] = None
-                           ) -> Optional[str]:
+    async def cmd_gdremove(self,
+                           ctx: command.Context,
+                           *,
+                           identifier: Optional[str] = None) -> Optional[str]:
         if not ctx.input and not identifier:
             return "__Pass the id of content to delete it__"
         if ctx.input and not identifier:
             identifier = getIdFromUrl(ctx.input)
 
         await util.run_sync(self.service.files().delete(  # type: ignore
-                            fileId=identifier, supportsAllDrives=True).execute)
+            fileId=identifier, supportsAllDrives=True).execute)
 
         return f"__Deleted:__ `{identifier}`"
 
@@ -508,9 +536,9 @@ class GoogleDrive(plugin.Plugin):
                     percent = round(((counter / length) * 100), 2)
                     progress_string = (f"__Copying {content['name']}"
                                        f": [{counter}/{length}] {percent}%__")
-                    if last_update_time is None or (now - last_update_time
-                                                    ).total_seconds() >= 5 and (
-                                                    progress_string != ""):
+                    if last_update_time is None or (
+                            now - last_update_time).total_seconds() >= 5 and (
+                                progress_string != ""):
                         await ctx.respond(progress_string)
                         last_update_time = now
 
@@ -627,11 +655,12 @@ class GoogleDrive(plugin.Plugin):
         except NameError:
             return "__Mirroring torrent file/url needs Aria2 loaded.__"
 
-    @command.filters(pyrogram.filters.regex(
-                     r"(parent)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
-                     r"(limit)=(\d+)|(filter)=(file|folder)|"
-                     r"(name)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
-                     r"(q)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')"))
+    @command.filters(
+        pyrogram.filters.regex(
+            r"(parent)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
+            r"(limit)=(\d+)|(filter)=(file|folder)|"
+            r"(name)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
+            r"(q)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')"))
     @command.usage("[parent=\"folderId\"] [name=\"file/folder name\"] "
                    "[limit=number] [filter=file/folder]"
                    "[q=\"search query\"], **single/double quote important for "
@@ -639,8 +668,7 @@ class GoogleDrive(plugin.Plugin):
                    optional=True)
     @command.desc("Search through all Google Drive by given query/parent/name")
     @command.alias("gdlist", "gdls")
-    async def cmd_gdsearch(self,
-                           ctx: command.Context) -> Optional[str]:
+    async def cmd_gdsearch(self, ctx: command.Context) -> Optional[str]:
         if ctx.input and not ctx.msg.matches:
             return "__Invalid parameters of input.__"
 
