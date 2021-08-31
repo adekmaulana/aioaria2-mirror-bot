@@ -3,6 +3,8 @@
 A Bot for Telegram made with Python using [Pyrogram](https://github.com/pyrogram/pyrogram) library.
 It needs **Python 3.9** or newer to run.
 
+**THIS BOT IS INTENDED TO BE USED ON ONE GROUP, BECAUSE EVERY CALL TO NEW TASK THE PROGRESS WILL MOVED INTO THAT CHAT.**
+
 ## Compatibility
 
 Bot should work with all Linux-based operating systems. This program is tested partially on Windows and not officially tested on macOS, but there shouldn't be any problem if you install the correct dependencies.
