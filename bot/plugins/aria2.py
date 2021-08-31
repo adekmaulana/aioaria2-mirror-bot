@@ -304,7 +304,7 @@ class Aria2WebSocketServer:
 
                     f = self.uploads[file.gid]
                     progress, done = await self.uploadProgress(f)
-                    if not done:
+                    if not done and progress:
                         progress_string += progress
 
                 continue
@@ -489,10 +489,12 @@ class Aria2(plugin.Plugin):
         return "__" + res["error"]["message"] + "__"
 
     async def addDownload(
-        self,types: Union[str, bytes],
+        self,
+        types: Union[str, bytes],
         ctx: command.Context,
         mega: bool = False,
-        options: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        options: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
         gid = None
         if isinstance(types, str):
             try:
@@ -511,9 +513,8 @@ class Aria2(plugin.Plugin):
                 await self._ws.context.response.delete()
             self._ws.context = ctx
 
-        if gid:
-            if mega:
-                self._ws.mega.add(gid)
+        if gid and mega:
+            self._ws.mega.add(gid)
             return gid
         
         return

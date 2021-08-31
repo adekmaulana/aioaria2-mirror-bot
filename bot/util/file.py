@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from mimetypes import guess_type
 from os.path import join
 from urllib import parse
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 
 from aiopath import AsyncPath
 from pyrogram.types import Message
@@ -12,7 +12,7 @@ from .async_helper import run_sync
 from .time import format_duration_td as time, sec
 
 
-def human_readable_bytes(value: int,
+def human_readable_bytes(value: Union[float, int],
                          digits: int = 2,
                          delim: str = "",
                          postfix: str = "") -> str:

@@ -7,7 +7,7 @@ from aiopath import AsyncPath
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
-from .. import command, plugin, util
+from .. import command, plugin
 from ..util import crypto
 
 if TYPE_CHECKING:

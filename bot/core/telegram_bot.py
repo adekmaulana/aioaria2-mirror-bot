@@ -11,7 +11,6 @@ from typing import (
     Union,
 )
 
-from aiopath import AsyncPath
 from pyrogram import Client
 from pyrogram.filters import Filter
 from pyrogram.handlers import (
@@ -43,7 +42,6 @@ class TelegramBot(BotMixinBase):
 
     # Initialized during startup
     client: Client
-    prefix: str
     user: User
     uid: int
     start_time_us: int

@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import Any, ClassVar, Iterator, MutableMapping, TypeVar
@@ -10,7 +11,7 @@ _VT = TypeVar("_VT", covariant=True)
 
 class TelegramConfig(MutableMapping[_KT, _VT]):
 
-    __data: ClassVar[MutableMapping[_KT, _VT]] = {}
+    __data: ClassVar[MutableMapping[_KT, Any]] = {}
 
     def __init__(self) -> None:
 
@@ -29,7 +30,18 @@ class TelegramConfig(MutableMapping[_KT, _VT]):
 
         for key, value in config.items():
             if not value:
-                continue
+                if key == "download_path":
+                    value = AsyncPath(Path.home() / "downloads")
+
+                if value == "":
+                    value = None
+            else:
+                if key == "download_path":
+                    value = AsyncPath(value)
+                elif key == "gdrive_index_link":
+                    value = value.rstrip("/")
+                elif key == "gdrive_secret":
+                    value = json.loads(value)
 
             super().__setattr__(key, value)
             self.__data[key] = value

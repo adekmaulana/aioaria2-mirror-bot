@@ -3,7 +3,11 @@ import bisect
 from typing import TYPE_CHECKING, Any, MutableMapping, MutableSequence
 
 from pyrogram.filters import Filter
-from pyrogram.types import Update
+from pyrogram.types import (
+    CallbackQuery,
+    InlineQuery,
+    Message,
+)
 
 from bot import plugin, util
 from bot.listener import Listener, ListenerFunc
@@ -12,6 +16,12 @@ from .bot_mixin_base import BotMixinBase
 
 if TYPE_CHECKING:
     from .bot import Bot
+
+EventType = (
+    CallbackQuery,
+    InlineQuery,
+    Message,
+)
 
 
 class EventDispatcher(BotMixinBase):
@@ -71,7 +81,11 @@ class EventDispatcher(BotMixinBase):
                     self.unregister_listener(listener)
 
     async def dispatch_event(
-        self: "Bot", event: str, *args: Any, wait: bool = True, **kwargs: Any
+        self: "Bot",
+        event: str,
+        *args: Any,
+        wait: bool = True,
+        **kwargs: Any
     ) -> None:
         tasks = set()
 
@@ -81,17 +95,23 @@ class EventDispatcher(BotMixinBase):
             return None
 
         if not listeners:
-            return
+            return None
 
+        match = None
+        index = None
         for lst in listeners:
             if lst.filters:
-                for arg in args:
-                    if isinstance(arg, Update):
+                for idx, arg in enumerate(args):
+                    if isinstance(arg, EventType):
                         permitted: bool = await lst.filters(self.client, arg)
-                        if permitted:
-                            break
+                        if not permitted:
+                            continue
 
-                        continue
+                        match = arg.matches
+                        index = idx
+                        break
+
+                    self.log.error(f"'{type(arg)}' can't be used with filters.")
                 else:
                     continue
 
@@ -99,8 +119,12 @@ class EventDispatcher(BotMixinBase):
             tasks.add(task)
 
         if not tasks:
-            return
+            return None
+
+        if match and index is not None:
+            args[index].matches = match
 
         self.log.debug("Dispatching event '%s' with data %s", event, args)
         if wait:
             await asyncio.wait(tasks)
+        return None

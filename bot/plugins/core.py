@@ -1,7 +1,7 @@
 import uuid
 import os
 from collections import defaultdict
-from typing import Any, ClassVar, List, MutableMapping, Optional
+from typing import ClassVar, List, MutableMapping, Optional
 
 import pyrogram
 from pyrogram import filters
@@ -22,7 +22,7 @@ OWNER: int = int(os.environ.get("OWNER_ID", 0))
 class Core(plugin.Plugin):
     name: ClassVar[str] = "Core"
 
-    db: Any
+    db: util.db.AsyncCollection
 
     async def on_load(self):
         self.db = self.bot.db.get_collection("sudoers")

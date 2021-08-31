@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import pyrogram
@@ -85,8 +84,8 @@ class Conversation:
             after = before - util.time.usec()
             result = await asyncio.wait_for(fut.get(), timeout - after)
 
-            if filters is not None and callable(filters):
-                permitted = await filters(self.bot.client, result)
+            if filters is not None:
+                permitted: bool = await filters(self.bot.client, result)
                 if not permitted:
                     continue
 

@@ -63,7 +63,7 @@ class Misc(plugin.Plugin):
                 f"Status: **Uploading**\n"
                 f"Progress: [{bullets + space}] {round(percent * 100)}%\n"
                 f"__{human(current)} of {human(total)} @ "
-                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n")  # type: ignore
+                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n")
             # Only edit message once every 5 seconds to avoid ratelimits
             if last_update_time is None or (
                     now - last_update_time).total_seconds() >= 5:

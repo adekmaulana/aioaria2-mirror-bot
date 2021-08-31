@@ -2,7 +2,7 @@ import base64
 import codecs
 import json
 import struct
-from typing import AsyncIterator, MutableMapping, Tuple
+from typing import MutableMapping
 from Crypto.Cipher import AES
 
 

@@ -7,14 +7,14 @@ import pyrogram
 
 from .command_dispatcher import CommandDispatcher
 from .conversation_dispatcher import ConversationDispatcher
-from .database_provider import DataBase
+from .database_provider import DatabaseProvider
 from .event_dispatcher import EventDispatcher
 from .plugin_extenter import PluginExtender
 from .telegram_bot import TelegramBot
 
 
 class Bot(TelegramBot,
-          DataBase,
+          DatabaseProvider,
           PluginExtender,
           CommandDispatcher,
           ConversationDispatcher,
@@ -63,7 +63,7 @@ class Bot(TelegramBot,
             if self.client.is_connected:
                 await self.client.stop()
         await self.http.close()
-        await self.close_db()
+        await self.db.close()
 
         self.log.info("Running post-stop hooks")
         if self.loaded:

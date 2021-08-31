@@ -49,11 +49,9 @@ DOMAIN = re.compile(r"https?:\/\/(?:www\.|:?www\d+\.|(?!www))"
                     r"([a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9])\.[^\s]{2,}")
 
 
-def getIdFromUrl(url: str) -> str:
-    try:
-        return PATTERN.search(url)[0]  # type: ignore
-    except (TypeError, IndexError):
-        return url
+def getIdFromUrl(url: str) -> Optional[str]:
+    match = PATTERN.search(url)
+    return match[0] if match else None
 
 
 class GoogleDrive(plugin.Plugin):
@@ -61,7 +59,7 @@ class GoogleDrive(plugin.Plugin):
 
     configs: MutableMapping[str, Any]
     credentials: Optional[Credentials]
-    db: Any
+    db: util.db.AsyncCollection
     service: Resource
 
     aria2: Any
@@ -78,24 +76,22 @@ class GoogleDrive(plugin.Plugin):
         self.db = self.bot.db.get_collection("gdrive")
         try:
             self.index_link = self.bot.config["gdrive_index_link"]
-        except AttributeError:
+        except KeyError:
             self.index_link = None
         try:
             self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
-        except AttributeError:
+        except KeyError:
             self.parent_id = None
         self.tasks = set()
 
         self.cache = {}
         self.copy_tasks = set()
 
-        try:
-            credentials = (await self.db.find_one({"_id": 1})
-                           )["credentials"]
-        except (KeyError, TypeError):
+        data = await self.db.find_one({"_id": 1})
+        if not data:
             try:
                 configs = self.bot.config["gdrive_secret"]
-            except AttributeError:
+            except KeyError:
                 self.log.warning(f"{self.name} module secret not satisfy.")
                 self.bot.unload_plugin(self)
                 return
@@ -107,9 +103,9 @@ class GoogleDrive(plugin.Plugin):
                 self.bot.unload_plugin(self)
                 return
         else:
+            credentials = data["credentials"]
             self.aria2 = self.bot.plugins["Aria2"]
-            self.credentials = Credentials.from_authorized_user_info(
-                credentials)
+            self.credentials = Credentials.from_authorized_user_info(credentials)
             # service will be overwrite if credentials is expired
             self.service = await util.run_sync(build,
                                                "drive",
@@ -149,7 +145,7 @@ class GoogleDrive(plugin.Plugin):
 
     @command.desc("Check your GoogleDrive credentials")
     @command.alias("gdauth")
-    async def cmd_gdcheck(self, ctx: command.Context) -> Optional[str]:
+    async def cmd_gdcheck(self, ctx: command.Context) -> None:
         await ctx.respond("__You are all set__")
 
     @command.desc("Clear/Reset your GoogleDrive credentials")
@@ -379,7 +375,7 @@ class GoogleDrive(plugin.Plugin):
                 f"Status: **Downloading**\n"
                 f"Progress: [{bullets + space}] {round(percent * 100)}%\n"
                 f"__{human(current)} of {human(total)} @ "
-                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n")  # type: ignore
+                f"{human(speed, postfix='/s')}\neta - {time(eta)}__\n\n")
             # Only edit message once every 5 seconds to avoid ratelimits
             if last_update_time is None or (
                     now - last_update_time).total_seconds() >= 5:
@@ -457,6 +453,8 @@ class GoogleDrive(plugin.Plugin):
 
         await ctx.respond("Gathering...")
         identifier = getIdFromUrl(ctx.input)
+        if not identifier:
+            return "__Invalid id__"
 
         try:
             content = await self.getInfo(identifier, ["id", "name", "mimeType"])
