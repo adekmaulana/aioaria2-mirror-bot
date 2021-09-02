@@ -58,9 +58,17 @@ class TelegramBot(BotMixinBase):
         super().__init__(**kwargs)
 
     async def init_client(self: "Bot") -> None:
-        api_id = int(self.config["api_id"])
+        api_id = self.config["api_id"]
+        if not api_id:
+            raise RuntimeError("API_ID environment variable not set")
+
         api_hash = self.config["api_hash"]
+        if not api_hash:
+            raise RuntimeError("API_HASH environment variable not set")
+
         bot_token = self.config["bot_token"]
+        if not bot_token:
+            raise RuntimeError("BOT_TOKEN environment variable not set")
 
         # Initialize Telegram client with gathered parameters
         self.client = Client(
@@ -85,8 +93,10 @@ class TelegramBot(BotMixinBase):
         await self.dispatch_event("load")
         self.loaded = True
 
-        if "GoogleDrive" not in self.plugins or "Aria2" not in self.plugins:
+        if "Aria2" not in self.plugins:
             raise RuntimeError("Aria2 websocket is not running, exiting...")
+        if "GoogleDrive" not in self.plugins:
+            raise RuntimeError("GoogleDrive environment variable needed not set")
 
         # Start Telegram client
         try:

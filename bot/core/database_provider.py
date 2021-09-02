@@ -12,7 +12,11 @@ class DatabaseProvider(BotMixinBase):
     db: util.db.AsyncDB
 
     def __init__(self: "Bot", **kwargs: Any):
-        client = util.db.AsyncClient(self.config["db_uri"], connect=False)
+        db_uri = self.config["db_uri"]
+        if not db_uri:
+            raise RuntimeError("DB_URI environment variable not set")
+
+        client = util.db.AsyncClient(db_uri, connect=False)
         self.db = client.get_database("bot")
 
         super().__init__(**kwargs)
