@@ -383,10 +383,13 @@ class GoogleDrive(plugin.Plugin):
 
                 last_update_time = now
 
-        file_path = download_path / file_name
-        file_path = await ctx.bot.client.download_media(msg,
-                                                        file_name=file_path,
-                                                        progress=prog_func)  # type: ignore
+        if file_name is None:
+            file_path = await ctx.bot.client.download_media(msg, progress=prog_func)
+        else:
+            file_path = f"{download_path}/{file_name}"
+            file_path = await ctx.bot.client.download_media(msg,
+                                                            file_name=file_path,
+                                                            progress=prog_func)  # type: ignore
 
         if file_path is not None:
             return AsyncPath(file_path)
