@@ -611,11 +611,6 @@ class GoogleDrive(plugin.Plugin):
         except NameError:
             return "__Mirroring torrent file/url needs Aria2 loaded.__"
 
-    @command.filters(pyrogram.filters.regex(
-                     r"(parent)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
-                     r"(limit)=(\d+)|(filter)=(file|folder)|"
-                     r"(name)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
-                     r"(q)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')"))
     @command.usage("[parent=\"folderId\"] [name=\"file/folder name\"] "
                    "[limit=number] [filter=file/folder]"
                    "[q=\"search query\"], **single/double quote important for "
@@ -623,15 +618,21 @@ class GoogleDrive(plugin.Plugin):
                    optional=True)
     @command.desc("Search through all Google Drive by given query/parent/name")
     @command.alias("gdlist", "gdls")
-    async def cmd_gdsearch(self,
-                           ctx: command.Context) -> Optional[str]:
-        if ctx.input and not ctx.msg.matches:
+    async def cmd_gdsearch(self, ctx: command.Context) -> Optional[str]:
+        regex = re.compile(
+            r"(parent)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
+            r"(limit)=(\d+)|(filter)=(file|folder)|"
+            r"(name)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')|"
+            r"(q)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')"
+        )
+        matches = regex.finditer(ctx.msg.text)
+        if ctx.input and not matches:
             return "__Invalid parameters of input.__"
 
         await ctx.respond("Collecting...")
 
         options: MutableMapping[str, Any] = {}
-        for match in ctx.msg.matches:
+        for match in matches:
             for index, option in enumerate(match.groups()):
                 if option is not None and match.group(index + 2) is not None:
                     match = match.group(index + 2)
