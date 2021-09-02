@@ -626,11 +626,10 @@ class GoogleDrive(plugin.Plugin):
             r"(q)=(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')"
         )
         matches = regex.finditer(ctx.msg.text)
-        if ctx.input and not matches:
-            return "__Invalid parameters of input.__"
 
         await ctx.respond("Collecting...")
 
+        length = 0
         options: MutableMapping[str, Any] = {}
         for match in matches:
             for index, option in enumerate(match.groups()):
@@ -643,7 +642,11 @@ class GoogleDrive(plugin.Plugin):
                         options[option] = match.removesuffix(
                             match[0]).removeprefix(match[0])
 
+                    length += 1
                     break
+
+        if ctx.input and length == 0:
+            return "__Invalid parameters of input.__"
 
         name = options.get("name")
         parent = options.get("parent")
