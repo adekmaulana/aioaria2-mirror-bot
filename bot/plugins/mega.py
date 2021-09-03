@@ -36,12 +36,16 @@ class Mega(plugin.Plugin):
         ) as resp:
             return (await resp.json())[0]
 
+    @command.desc("Mirror mega file link into GoogleDrive")
+    @command.usage("[Mega or reply to message]")
     async def cmd_mega(self, ctx: command.Context) -> Optional[str]:
-        if not ctx.input:
+        if not ctx.input and not ctx.msg.reply_to_message:
             return "Mega link not provided"
-        
+
+        uri = ctx.msg.reply_to_message.text or ctx.input
+
         try:
-            url = re.findall(r'\bhttps?://.*mega.*\.nz\S+', ctx.input)[0]
+            url = re.findall(r'\bhttps?://.*mega.*\.nz\S+', uri)[0]
         except IndexError:
             return "Invalid mega link"
 
@@ -59,7 +63,6 @@ class Mega(plugin.Plugin):
         key = crypto.base64_to_a32(file_key)
         k = (key[0] ^ key[4], key[1] ^ key[5], key[2] ^ key[6], key[3] ^ key[7])
         iv = key[4:6] + (0, 0)
-        metaMAC = key[6:8]
 
         file = await self.api_request(file_id)
         if not isinstance(file, (MutableMapping, dict)):
