@@ -49,9 +49,12 @@ DOMAIN = re.compile(r"https?:\/\/(?:www\.|:?www\d+\.|(?!www))"
                     r"([a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9])\.[^\s]{2,}")
 
 
-def getIdFromUrl(url: str) -> Optional[str]:
+def getIdFromUrl(url: Optional[str]) -> Optional[str]:
+    if not url:
+        return None
+
     match = PATTERN.search(url)
-    return match[0] if match else None
+    return match[0] if match else url
 
 
 class GoogleDrive(plugin.Plugin):
@@ -652,9 +655,7 @@ class GoogleDrive(plugin.Plugin):
             return "__Invalid parameters of input.__"
 
         name = options.get("name")
-        parent = options.get("parent")
-        if parent:
-            parent = getIdFromUrl(parent)
+        parent = getIdFromUrl(options.get("parent"))
 
         limit = int(options.get("limit", 15))
         if limit > 1000:
