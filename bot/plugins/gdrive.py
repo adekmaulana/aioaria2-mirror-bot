@@ -77,14 +77,8 @@ class GoogleDrive(plugin.Plugin):
     async def on_load(self) -> None:
         self.credentials = None
         self.db = self.bot.db.get_collection("gdrive")
-        try:
-            self.index_link = self.bot.config["gdrive_index_link"]
-        except KeyError:
-            self.index_link = None
-        try:
-            self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
-        except KeyError:
-            self.parent_id = None
+        self.index_link = self.bot.config["gdrive_index_link"]
+        self.parent_id = getIdFromUrl(self.bot.config["gdrive_folder_id"])
         self.tasks = set()
 
         self.cache = {}
@@ -92,17 +86,9 @@ class GoogleDrive(plugin.Plugin):
 
         data = await self.db.find_one({"_id": 1})
         if not data:
-            try:
-                configs = self.bot.config["gdrive_secret"]
-            except KeyError:
+            self.configs = self.bot.config["gdrive_secret"]
+            if not self.configs:
                 self.log.warning(f"{self.name} module secret not satisfy.")
-                self.bot.unload_plugin(self)
-                return
-
-            try:
-                self.configs = json.loads(configs)
-            except json.JSONDecodeError:
-                self.log.error("G_DRIVE_SECRET is not valid!")
                 self.bot.unload_plugin(self)
                 return
         else:
