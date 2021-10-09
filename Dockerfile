@@ -1,5 +1,5 @@
 # Build Python package and dependencies
-FROM python:3-alpine AS python-build
+FROM python:3.9-alpine AS python-build
 RUN apk add --no-cache \
         git \
         libffi-dev \
@@ -29,7 +29,7 @@ RUN pip install .
 
 
 # Package everything
-FROM python:3-alpine AS final
+FROM python:3.9-alpine AS final
 # Update system first
 RUN apk update
 
