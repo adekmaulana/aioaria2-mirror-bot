@@ -44,7 +44,7 @@ TgCrypto = "^1.2.2"
 
 # Core Extra
 dnspython = "^2.1.0"
-aioaria2 = "^1.3.3"
+aioaria2 = "^1.3.4"
 
 # Debug
 speedtest-cli = "^2.1.3"
