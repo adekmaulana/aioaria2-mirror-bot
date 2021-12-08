@@ -597,7 +597,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "pyrogram"
-version = "1.2.9"
+version = "1.2.18"
 description = "Telegram MTProto API Client Library and Framework for Python"
 category = "main"
 optional = false
@@ -809,7 +809,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ba7ebc487804ca047edce6a0f60afceaa04fdab3f40b3ff234e76dd925f41ef3"
+content-hash = "ab50259b2e78ab70a13b4e1cf38fc0988f465066f8271e5f37231307064a490d"
 
 [metadata.files]
 aioaria2 = [
@@ -1444,8 +1444,8 @@ pyparsing = [
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
 ]
 pyrogram = [
-    {file = "Pyrogram-1.2.9-py3-none-any.whl", hash = "sha256:85cacbcebb704f6d849ff52b07e1bb4972b4ff81216c3d45ed385e9a5ab057a7"},
-    {file = "Pyrogram-1.2.9.tar.gz", hash = "sha256:0f207cac92f4a4d204037214a1ebb54ba272a9557a22633427880fdef844c012"},
+    {file = "Pyrogram-1.2.18-py3-none-any.whl", hash = "sha256:0dfcc926e7dbd486776ba3315166793daf2d522a72b6a6b3772e241a44d0ab33"},
+    {file = "Pyrogram-1.2.18.tar.gz", hash = "sha256:4fa8fd4fe45f77d0e8f0817450a15a4644ab8d4c0efbb2e3305ee440e6231170"},
 ]
 pysocks = [
     {file = "PySocks-1.7.1-py27-none-any.whl", hash = "sha256:08e69f092cc6dbe92a0fdd16eeb9b9ffbc13cadfe5ca4c7bd92ffb078b293299"},
