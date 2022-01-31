@@ -60,7 +60,7 @@ google-auth-oauthlib = "^0.4.6"
 tenacity = "^8.0.1"
 aiopath = "<0.6.0"
 beautifulsoup4 = {extras = ["lxml"], version = "^4.10.0"}
-pycryptodome = "^3.11.0"
+pycryptodome = "^3.14.0"
 
 [tool.poetry.dev-dependencies]
 isort = {version = "^5.9.3", extras = ["pyproject"]}
