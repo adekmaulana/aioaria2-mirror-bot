@@ -114,7 +114,10 @@ class File:
             size = status.total_size
             current = status.resumable_progress
             percent = current / size
-            speed = round(current / after, 2)
+            try:
+                speed = round(current / after, 2)
+            except ZeroDivisionError:
+                speed = 0.1
             eta = timedelta(seconds=int(round((size - current) / speed)))
             bullets = "●" * int(round(percent * 10)) + "○"
             if len(bullets) > 10:
