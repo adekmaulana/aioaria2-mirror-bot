@@ -52,7 +52,7 @@ beauty-print = "^0.6.1"
 meval = "^2.5"
 
 # GoogleDrive
-google-api-python-client = "^2.29.0"
+google-api-python-client = "^2.44.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.6"
 
