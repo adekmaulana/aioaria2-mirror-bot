@@ -117,7 +117,7 @@ class File:
             try:
                 speed = round(current / after, 2)
             except ZeroDivisionError:
-                speed = 0.1
+                continue
             eta = timedelta(seconds=int(round((size - current) / speed)))
             bullets = "●" * int(round(percent * 10)) + "○"
             if len(bullets) > 10:
