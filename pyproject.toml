@@ -65,7 +65,7 @@ pycryptodome = "^3.11.0"
 [tool.poetry.dev-dependencies]
 isort = {version = "^5.9.3", extras = ["pyproject"]}
 mypy = "^0.910"
-pre-commit = "^2.15.0"
+pre-commit = "^3.0.0"
 yapf = "^0.31.0"
 
 [tool.poetry.scripts]
